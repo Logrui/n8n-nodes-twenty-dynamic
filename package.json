@@ -6,21 +6,23 @@
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/Logrui/n8n-nodes-twenty-dynamic",
   "author": {
-    "name": "S Hodgson",
+    "name": "Logrui",
     "email": "steven@hodgolabs.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shodgson/n8n-nodes-twenty"
+    "url": "https://github.com/Logrui/n8n-nodes-twenty-dynamic"
+  },
+  "bugs": {
+    "url": "https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues"
   },
   "engines": {
     "node": ">=18.10",
     "pnpm": ">=9.1"
   },
   "packageManager": "pnpm@9.1.4",
-  "main": "index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "build": "tsc && gulp build:icons",
@@ -53,8 +55,5 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  },
-  "dependencies": {
-    "@devlikeapro/n8n-openapi-node": "^0.1.4"
   }
 }

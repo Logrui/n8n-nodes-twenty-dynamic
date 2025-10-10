@@ -22,6 +22,16 @@ export class TwentyApi implements ICredentialType {
 			type: 'string',
 			default: '',
 		},
+		{
+			displayName: 'Schema Cache',
+			name: 'schemaCache',
+			type: 'json',
+			default: '',
+			displayOptions: {
+				show: {},
+			},
+			description: 'Stores the API schema to reduce API calls. Will be updated automatically.',
+		},
 	];
 
 	authenticate: IAuthenticateGeneric = {
