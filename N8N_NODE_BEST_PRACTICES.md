@@ -2,6 +2,8 @@
 
 This document summarizes the key concepts, standards, and best practices for building custom n8n nodes, based on the official n8n documentation.
 
+**Governance**: This document provides practical guidance for n8n node development. For project-wide governance, architectural decisions, and non-negotiable principles, refer to the [Project Constitution](`.specify/memory/constitution.md`). All development decisions MUST comply with constitutional principles.
+
 ## Summary of Key Principles
 
 ### 1. Two Ways to Build: Declarative vs. Programmatic
