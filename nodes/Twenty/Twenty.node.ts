@@ -12,7 +12,7 @@ const credentialName = 'twentyApi';
 
 export class Twenty implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Twenty',
+		displayName: 'Twenty CRM Dynamic',
 		name: 'twenty',
 		icon: 'file:twenty.svg',
 		group: ['transform'],
@@ -20,7 +20,7 @@ export class Twenty implements INodeType {
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Consume the Twenty API with dynamic schema support',
 		defaults: {
-			name: 'Twenty',
+			name: 'Twenty CRM Dynamic',
 		},
 		inputs: ['main'] as any,
 		outputs: ['main'] as any,
@@ -32,9 +32,18 @@ export class Twenty implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Resource',
+				displayName: 'Force Refresh Schema',
+				name: 'forceRefresh',
+				type: 'boolean',
+				default: false,
+				description: 'Check this to ignore cache and fetch fresh schema from Twenty API. Uncheck after refresh to restore fast loading.',
+			},
+			{
+				displayName: 'Resource Name or ID',
 				name: 'resource',
 				type: 'options',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Note: Schema is cached for 10 minutes - new custom objects may take up to 10 minutes to appear.',
+				noDataExpression: true,
 				typeOptions: {
 					loadOptionsMethod: 'getTwentyResources',
 				},
@@ -45,21 +54,15 @@ export class Twenty implements INodeType {
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
-				displayOptions: {
-					show: {
-						resource: [
-							'',
-						],
-					},
-				},
+				noDataExpression: true,
 				options: [
-					{ name: 'Create/Update', value: 'createOrUpdate' },
-					{ name: 'Get', value: 'get' },
-					{ name: 'List/Search', value: 'list' },
-					{ name: 'Delete', value: 'delete' },
-					{ name: 'Refresh Schema', value: 'refreshSchema', description: 'Updates the cached API schema' },
+					{ name: 'Create', value: 'createOne' },
+					{ name: 'Delete', value: 'deleteOne' },
+					{ name: 'Get', value: 'findOne' },
+					{ name: 'List/Search', value: 'findMany' },
+					{ name: 'Update', value: 'updateOne' },
 				],
-				default: 'createOrUpdate',
+				default: 'createOne',
 				required: true,
 			},
 			// Dynamic fields for Create/Update
@@ -71,19 +74,19 @@ export class Twenty implements INodeType {
 				default: {},
 				displayOptions: {
 					show: {
-						operation: ['createOrUpdate'],
+						operation: ['createOne', 'updateOne'],
 						resource: [''],
 					},
 				},
 				options: [
 					{
-						displayName: 'Field Key',
+						displayName: 'Field Key Name or ID',
 						name: 'key',
 						type: 'options',
+						description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 						default: '',
 						typeOptions: {
 							loadOptionsMethod: 'getFieldsForResource',
-							// Return the full field object, not just the value
 							loadOptionsDependsOn: ['resource'],
 							returnFullObject: true,
 						},
@@ -93,33 +96,16 @@ export class Twenty implements INodeType {
 						name: 'value',
 						type: 'string',
 						default: '',
-						displayOptions: {
-							// Hide this input ONLY if the selected field is a lookup or relation
-							hide: {
-								'key.type': [
-									'LOOKUP',
-									'RELATION',
-								]
-							}
-						},
 					},
 					{
-						displayName: 'Field Value',
+						displayName: 'Field Value Name or ID',
 						name: 'valueLookup',
 						type: 'options',
+						description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 						default: '',
 						typeOptions: {
 							loadOptionsMethod: 'getRelationRecords',
 							loadOptionsDependsOn: ['key'],
-						},
-						displayOptions: {
-							// Show this input only if the selected field IS a lookup or relation
-							show: {
-								'key.type': [
-									'LOOKUP',
-									'RELATION',
-								]
-							}
 						},
 					},
 				],
@@ -133,7 +119,7 @@ export class Twenty implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['get', 'delete'],
+						operation: ['findOne', 'deleteOne'],
 						resource: [''],
 					},
 				},
@@ -143,30 +129,33 @@ export class Twenty implements INodeType {
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
+				typeOptions: {
+					minValue: 1,
+				},
 				default: 50,
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['findMany'],
 						resource: [''],
 					},
 				},
 				description: 'Max number of results to return',
 			},
 			{
-				displayName: 'View',
+				displayName: 'View Name or ID',
 				name: 'viewId',
 				type: 'options',
 				default: '',
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['findMany'],
 						resource: [''],
 					},
 				},
 				typeOptions: {
 					loadOptionsMethod: 'getViewsForResource',
 				},
-				description: 'Select a pre-configured view from Twenty. If a view is selected, the filters below will be ignored.',
+				description: 'Select a pre-configured view from Twenty. If a view is selected, the filters below will be ignored. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Filter Logic',
@@ -175,7 +164,7 @@ export class Twenty implements INodeType {
 				default: 'AND',
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['findMany'],
 						resource: [''],
 					},
 				},
@@ -192,15 +181,16 @@ export class Twenty implements INodeType {
 				default: {},
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['findMany'],
 						resource: [''],
 					},
 				},
 				options: [
 					{
-						displayName: 'Field',
+						displayName: 'Field Name or ID',
 						name: 'key',
 						type: 'options',
+						description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 						default: '',
 						typeOptions: {
 							loadOptionsMethod: 'getFieldsForResource',
@@ -239,21 +229,65 @@ export class Twenty implements INodeType {
 	methods = {
 		loadOptions: {
 			async getTwentyResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				let forceRefresh = false;
+				try {
+					forceRefresh = this.getNodeParameter('forceRefresh', 0) as boolean;
+				} catch (error) {
+					// Parameter doesn't exist or is not set, default to false
+				}
 				const credentials = await this.getCredentials('twentyApi');
-				const cachedSchema = (credentials.schemaCache ? JSON.parse(credentials.schemaCache as string) : {}) as { resources?: { name: string; value: string }[], timestamp?: number };
+				const cachedSchema = (credentials.schemaCache ? JSON.parse(credentials.schemaCache as string) : {}) as { resources?: { name: string; value: string; id: string }[], fields?: any, timestamp?: number };
 
-				// Always try to return from cache first in the UI
-				if (cachedSchema.resources) {
+				// If cache is present and not older than 10 minutes, return it (unless force refresh is enabled)
+				if (!forceRefresh && cachedSchema.resources && cachedSchema.timestamp && (Date.now() - cachedSchema.timestamp < 600000)) {
 					return cachedSchema.resources;
 				}
 
-				// If cache is empty, fetch from API, but do not update credential from here
-				const query = `query ObjectMetadataItems { ObjectMetadataItems { apiName labelPlural } }`;
+				// If cache is empty or stale, fetch from API and update the credential
+				this.logger.info('Schema cache is empty or stale. Fetching fresh Twenty API schema...');
+				const schemaQuery = `
+					query FullSchema {
+						ObjectMetadataItems {
+							id
+							apiName
+							labelPlural
+							fieldsList {
+								apiName
+								label
+								type
+								relation {
+									relatedTo
+								}
+							}
+						}
+					}
+				`;
 				try {
-					const data = await twentyApiRequest.call(this, 'metadata', query) as { ObjectMetadataItems: { apiName: string; labelPlural: string }[] };
-					return data.ObjectMetadataItems.map((item: { apiName: string; labelPlural: string }) => ({ name: item.labelPlural, value: item.apiName }));
+					const data = await twentyApiRequest.call(this, 'metadata', schemaQuery) as { ObjectMetadataItems: any[] };
+
+					const newFields: { [key: string]: any[] } = {};
+					data.ObjectMetadataItems.forEach(item => {
+						newFields[item.apiName] = item.fieldsList.map((field: { apiName: string; label: string; type: string; relation?: { relatedTo?: string } }) => ({
+							name: field.label,
+							value: field.apiName,
+							type: field.type,
+							relatedTo: field.relation?.relatedTo,
+						}));
+					});
+
+					const newResources = data.ObjectMetadataItems.map(item => ({ name: item.labelPlural, value: item.apiName, id: item.id }));
+
+					const schema = { resources: newResources, fields: newFields, timestamp: Date.now() };
+
+					// The 'as any' cast is a necessary workaround to access updateCredentialData
+					await (this as any).updateCredentialData('twentyApi', { schemaCache: JSON.stringify(schema) });
+
+					this.logger.info('Successfully fetched and cached new Twenty API schema.');
+					return newResources;
 				} catch (error) {
-					return [];
+					this.logger.error(`Failed to fetch Twenty API schema. Error: ${error.message}`);
+					// Return any stale resources from cache if the fetch fails, otherwise return empty
+					return cachedSchema.resources || [];
 				}
 			},
 
@@ -356,6 +390,7 @@ export class Twenty implements INodeType {
 			},
 		},
 	};
+
 	async execute(this: IExecuteFunctions): Promise<any> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
@@ -365,7 +400,7 @@ export class Twenty implements INodeType {
 
 		// Fetch all available fields for the selected resource to dynamically build the query
 		let fieldsString = 'id'; // Default to 'id' if the metadata call fails
-		if (operation !== 'delete') {
+		if (operation !== 'deleteOne') {
 			try {
 				const fieldsQuery = `query ObjectMetadataItem($apiName: String!) { ObjectMetadataItem(apiName: $apiName) { fieldsList { apiName } } }`;
 				const fieldsData = await twentyApiRequest.call(this, 'metadata', fieldsQuery, { apiName: resource }) as { ObjectMetadataItem: { fieldsList: { apiName: string }[] } };
@@ -378,45 +413,7 @@ export class Twenty implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				if (operation === 'refreshSchema') {
-					this.logger.info('Refreshing Twenty API schema...');
-					const schemaQuery = `
-						query FullSchema {
-							ObjectMetadataItems {
-								id
-								apiName
-								labelPlural
-								fieldsList {
-									apiName
-									label
-									type
-									relation {
-										relatedTo
-									}
-								}
-							}
-						}
-					`;
-					const data = await twentyApiRequest.call(this, 'metadata', schemaQuery) as { ObjectMetadataItems: any[] };
-					
-					const newFields: { [key: string]: any[] } = {};
-					data.ObjectMetadataItems.forEach(item => {
-						newFields[item.apiName] = item.fieldsList.map((field: { apiName: string; label: string; type: string; relation?: { relatedTo?: string } }) => ({
-							name: field.label,
-							value: field.apiName,
-							type: field.type,
-							relatedTo: field.relation?.relatedTo,
-						}));
-					});
-
-					const newResources = data.ObjectMetadataItems.map(item => ({ name: item.labelPlural, value: item.apiName, id: item.id }));
-
-					const schema = { resources: newResources, fields: newFields, timestamp: Date.now() };
-					// The 'as any' cast is a necessary workaround to access updateCredentialData
-					await (this as any).updateCredentialData('twentyApi', { schemaCache: JSON.stringify(schema) });
-
-					returnData.push({ json: { success: true, message: 'Schema refreshed successfully.' }, pairedItem: { item: i } });
-				} else if (operation === 'createOrUpdate') {
+				if (operation === 'createOne' || operation === 'updateOne') {
 					const { fields } = this.getNodeParameter('fields', i, {}) as {
 						fields: { key: { value: string }; value?: string; valueLookup?: string }[];
 					};
@@ -430,8 +427,8 @@ export class Twenty implements INodeType {
 						return acc;
 					}, {} as { [key: string]: any });
 
-					const mutationName = `createOrUpdate${resource}`;
-					const inputType = `${resource}CreateOrUpdateInput!`;
+					const mutationName = `${operation}${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
+					const inputType = `${resource.charAt(0).toUpperCase() + resource.slice(1)}CreateOrUpdateInput!`;
 
 					const query = `
 						mutation ${mutationName}($input: ${inputType}) {
@@ -443,10 +440,10 @@ export class Twenty implements INodeType {
 
 					const result = await twentyApiRequest.call(this, 'graphql', query, { input }) as { [key: string]: { [key: string]: any } };
 					returnData.push({ json: result, pairedItem: { item: i } });
-				} else if (operation === 'get') {
+				} else if (operation === 'findOne') {
 					const id = this.getNodeParameter('id', i) as string;
 
-					const queryName = `get${resource}`;
+					const queryName = `findOne${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
 
 					const query = `
 						query ${queryName}($id: ID!) {
@@ -458,7 +455,7 @@ export class Twenty implements INodeType {
 
 					const result = await twentyApiRequest.call(this, 'graphql', query, { id }) as { [key: string]: { [key: string]: any } };
 					returnData.push({ json: result, pairedItem: { item: i } });
-				} else if (operation === 'list') {
+				} else if (operation === 'findMany') {
 					const limit = this.getNodeParameter('limit', i) as number;
 					const viewId = this.getNodeParameter('viewId', i) as string;
 
@@ -514,8 +511,8 @@ export class Twenty implements INodeType {
 						}
 					}
 
-					const queryName = `${resource}s`; // e.g., Companys, Opportunitys (API convention)
-					const filterType = `${resource}Filters!`;
+					const queryName = `findMany${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
+					const filterType = `${resource.charAt(0).toUpperCase() + resource.slice(1)}Filters!`;
 
 					const query = `
 						query ${queryName}($first: Int, $where: ${filterType}) {
@@ -533,10 +530,10 @@ export class Twenty implements INodeType {
 					// Extract the nodes from the edges
 					const nodes = result[queryName].edges.map((edge: { node: any }) => edge.node);
 					returnData.push(...this.helpers.returnJsonArray(nodes));
-				} else if (operation === 'delete') {
+				} else if (operation === 'deleteOne') {
 					const id = this.getNodeParameter('id', i) as string;
 
-					const mutationName = `delete${resource}`;
+					const mutationName = `deleteOne${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
 
 					const query = `
 						mutation ${mutationName}($id: ID!) {
@@ -560,4 +557,3 @@ export class Twenty implements INodeType {
 		return this.prepareOutputData(returnData);
 	}
 }
-

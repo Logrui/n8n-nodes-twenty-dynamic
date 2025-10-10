@@ -1,6 +1,8 @@
 ### Project Plan: The Self-Adapting Twenty CRM Node
 
-This document tracks the development of a dynamic n8n node for Twenty CRM. The core principle is to create a self-adapting node that automatically discovers and adjusts to the Twenty API schema. This is achieved by querying a `/metadata` endpoint to get a map of all available resources and their fields. At runtime, the node dynamically constructs GraphQL query strings based on this schema and the user's input. These queries are then executed using n8n's native HTTP helper, ensuring compliance with best practices by avoiding external dependencies for network requests. A user-driven caching mechanism, via a `Refresh Schema` operation, is implemented to improve performance by storing the discovered schema in the user's credentials.
+This document tracks the development of a dynamic n8n node for Twenty CRM. The core principle is to create a self-adapting node that automatically discovers and adjusts to the Twenty API schema. This is achieved by querying a `/metadata` endpoint to get a map of all available resources and their fields. At runtime, the node dynamically constructs GraphQL query strings based on this schema and the user's input. These queries are then executed using n8n's native HTTP helper, ensuring compliance with best practices by avoiding external dependencies for network requests. 
+
+**Cache Strategy**: The node implements a hybrid caching approach with a short TTL (10 minutes) stored in credential data. This balances performance (reducing API calls) with data freshness (schema updates appear relatively quickly). A "Force Refresh Schema" checkbox is available at the top of the node to allow users to bypass the cache on demand and fetch fresh schema data immediately. Simply check the box to refresh, then uncheck it to restore fast loading.
 
 ---
 
@@ -42,7 +44,7 @@ This document tracks the development of a dynamic n8n node for Twenty CRM. The c
 
 #### **Stage 4: Intelligent Schema and Field Handling**
 - [x] **Enhance Field Returns:** Modified `Get`, `List/Search`, and `Create/Update` operations to dynamically query for and return *all* available fields for a resource.
-- [x] **Implement User-Driven Caching:** Added a `Refresh Schema` operation to the node. This allows users to manually update a schema cache stored in the credential data, improving performance by reducing redundant API calls.
+- [x] **Implement Automatic Caching with TTL:** Implemented a hybrid caching strategy with 10-minute TTL. Schema is automatically fetched when cache is stale, balancing performance with data freshness. The previous manual "Refresh Schema" operation was removed as it was architecturally ineffective due to n8n's credential loading behavior.
 - [ ] **(Optional) Schema Versioning:** Implement a system to detect breaking changes in the schema between refreshes and warn the user.
 
 #### **Stage 5: Advanced UI/UX (Hyper-Dynamic Interface)**
