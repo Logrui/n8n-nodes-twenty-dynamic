@@ -1,2 +1,53 @@
+# Development files
 .DS_Store
 *.tsbuildinfo
+.vscode/
+.idea/
+
+# Source files (publish compiled only)
+*.ts
+!*.d.ts
+tsconfig.json
+tslint.json
+
+# Build tools
+gulpfile.js
+
+# Specs and documentation
+specs/
+.specify/
+PLAN_V2.md
+EXISTING_ARCHITECTURE_SUMMARY.md
+N8N_NODE_BEST_PRACTICES.md
+
+# Test files
+test/
+tests/
+*.test.ts
+*.spec.ts
+
+# CI/CD
+.github/
+
+# ESLint and Prettier
+.eslintrc.js
+.eslintrc.prepublish.js
+.prettierrc.js
+.eslintignore
+.prettierignore
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env*
+
+# Logs
+*.log
+
+# Package manager
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

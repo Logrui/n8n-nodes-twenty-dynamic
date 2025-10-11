@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Minified files
+*.min.js
+
+# Generated files
+*.generated.ts
+*.tsbuildinfo
+
+# Specs and documentation
+specs/
+.specify/
+
+# IDE
+.vscode/
+.idea/
