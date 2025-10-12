@@ -10,6 +10,7 @@
 import {
     getCachedSchema,
     ISchemaMetadata,
+    getDataSchemaForObject,
     buildCreateMutation,
     buildGetQuery,
     buildUpdateMutation,
@@ -17,18 +18,20 @@ import {
     buildListQuery,
     twentyApiRequest,
 } from './TwentyApi.client';
+import { getAllComplexFieldParameters, getComplexFieldNames } from './FieldParameters';
+import { transformFieldsData, IFieldData } from './FieldTransformation';
 
 export class Twenty implements INodeType {
     description: INodeTypeDescription = {
-        displayName: 'Twenty',
+        displayName: 'Twenty CRM - Dynamic',
         name: 'twenty',
         icon: 'file:twenty.svg',
         group: ['transform'],
         version: 1,
         subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-        description: 'Interact with Twenty CRM - automatically adapts to your custom objects and fields',
+        description: 'Interact with Twenty CRM - supporting standard and custom data models - dynamically adapts to your database schema.',
         defaults: {
-            name: 'Twenty',
+            name: 'Twenty CRM - Dynamic',
         },
         inputs: ['main'] as any,
         outputs: ['main'] as any,
@@ -50,7 +53,7 @@ export class Twenty implements INodeType {
             },
             // Resource selection
             {
-                displayName: 'Resource Name or ID',
+                displayName: 'Object Name or ID',
                 name: 'resource',
                 type: 'options',
 																noDataExpression: true,
@@ -150,13 +153,39 @@ export class Twenty implements INodeType {
                                 default: '',
                                 description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                             },
+                            // Simple field value (hidden for complex fields except name)
                             {
                                 displayName: 'Field Value',
                                 name: 'fieldValue',
                                 type: 'string',
+                                displayOptions: {
+                                    hide: {
+                                        fieldName: getComplexFieldNames(),
+                                    },
+                                },
                                 default: '',
-                                description: 'The value to set for this field. Use expressions for dynamic values.',
+                                description: 'The value to set for this field',
+                                placeholder: 'Enter value',
                             },
+                            // Company/Other resources: name field is simple text
+                            {
+                                displayName: 'Field Value',
+                                name: 'fieldValue',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        fieldName: ['name'],
+                                    },
+                                    hide: {
+                                        resource: ['person'],
+                                    },
+                                },
+                                default: '',
+                                description: 'The company/object name',
+                                placeholder: 'Acme Corporation',
+                            },
+                            // Complex field parameters (imported from FieldParameters module)
+                            ...getAllComplexFieldParameters(),
                         ],
                     },
                 ],
@@ -228,7 +257,8 @@ export class Twenty implements INodeType {
 
             /**
              * Get writable fields for the selected resource.
-             * Used to populate field dropdowns for Create and Update operations.
+             * Uses GraphQL introspection on the /graphql data schema to get ALL fields.
+             * This replaces the previous /metadata approach which only returned custom fields.
              */
             async getFieldsForResource(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
@@ -238,28 +268,51 @@ export class Twenty implements INodeType {
                         return [];
                     }
 
-                    // Get schema with caching
-                    // DEBUG v0.1.9: Force refresh to bypass cache
-                    const schema: ISchemaMetadata = await getCachedSchema.call(this, true);
-
-                    // Find the object by nameSingular
-                    const objectMetadata = schema.objects.find((obj) => obj.nameSingular === resource);
-                    if (!objectMetadata) {
-                        throw new NodeOperationError(this.getNode(), `Object "${resource}" not found in schema`);
+                    // Get operation to determine which fields to show
+                    let operation = '';
+                    try {
+                        operation = this.getCurrentNodeParameter('operation') as string;
+                    } catch {
+                        // Operation not selected yet, default to showing all fields
                     }
 
-                    // Transform fields to dropdown options
-                    // For now, show ALL fields to debug what's being filtered
-                    // TODO: Properly filter read-only/system fields once we understand the schema
-                    const options: INodePropertyOptions[] = objectMetadata.fields
-                        .map((field) => ({
-                            name: field.label || field.name,
-                            value: field.name,
-                            description: `Type: ${field.type}${field.isNullable ? ' (optional)' : ' (required)'} [active: ${field.isActive}, system: ${field.isSystem}] (${objectMetadata.fields.length} total)`,
-                        }));
+                    // Use data schema introspection to get ALL fields (standard + custom)
+                    const fields = await getDataSchemaForObject.call(this, resource);
 
-                    // Sort alphabetically by label
-                    options.sort((a, b) => a.name.localeCompare(b.name));
+                    // Filter fields based on operation
+                    const isCreateOrUpdate = operation === 'createOne' || operation === 'updateOne';
+                    const filteredFields = isCreateOrUpdate
+                        ? fields.filter((field) => field.isWritable) // Only writable fields for Create/Update
+                        : fields; // All fields for Get/List/Delete
+
+                    // Transform to dropdown options
+                    const options: INodePropertyOptions[] = filteredFields.map((field) => ({
+                        name: `${field.name} (${field.label})`,
+                        value: field.name,
+                        description: `Type: ${field.type}${field.isNullable ? ' (optional)' : ' (required)'}`,
+                    }));
+
+                    // Sort: 'name' first, then system/standard fields, then alphabetically
+                    options.sort((a, b) => {
+                        const aValue = String(a.value);
+                        const bValue = String(b.value);
+                        
+                        // 'name' always comes first
+                        if (aValue === 'name') return -1;
+                        if (bValue === 'name') return 1;
+                        
+                        const aIsStandard = ['id', 'createdAt', 'updatedAt', 'deletedAt'].some(
+                            (f) => aValue.includes(f)
+                        );
+                        const bIsStandard = ['id', 'createdAt', 'updatedAt', 'deletedAt'].some(
+                            (f) => bValue.includes(f)
+                        );
+
+                        if (aIsStandard === bIsStandard) {
+                            return a.name.localeCompare(b.name);
+                        }
+                        return aIsStandard ? -1 : 1;
+                    });
 
                     return options;
                 } catch (error) {
@@ -288,16 +341,12 @@ export class Twenty implements INodeType {
                 if (operation === 'createOne') {
                     // Get fields from node parameters
                     const fieldsParam = this.getNodeParameter('fields', i, {}) as {
-                        field?: Array<{ fieldName: string; fieldValue: any }>;
+                        field?: IFieldData[];
                     };
 
-                    // Transform fields array to data object
-                    const fieldsData: Record<string, any> = {};
-                    if (fieldsParam.field && Array.isArray(fieldsParam.field)) {
-                        for (const field of fieldsParam.field) {
-                            fieldsData[field.fieldName] = field.fieldValue;
-                        }
-                    }
+                    // Transform fields array to data object using modular transformation
+                    // Pass resource to handle resource-specific transformations (e.g., Person.name is FullName, Company.name is String)
+                    const fieldsData = transformFieldsData(fieldsParam.field || [], resource);
 
                     // Build and execute create mutation
                     const { query, variables } = buildCreateMutation(
@@ -349,16 +398,12 @@ export class Twenty implements INodeType {
                     // Get recordId and fields from node parameters
                     const recordId = this.getNodeParameter('recordId', i) as string;
                     const fieldsParam = this.getNodeParameter('fields', i, {}) as {
-                        field?: Array<{ fieldName: string; fieldValue: any }>;
+                        field?: IFieldData[];
                     };
 
-                    // Transform fields array to data object (partial update)
-                    const fieldsData: Record<string, any> = {};
-                    if (fieldsParam.field && Array.isArray(fieldsParam.field)) {
-                        for (const field of fieldsParam.field) {
-                            fieldsData[field.fieldName] = field.fieldValue;
-                        }
-                    }
+                    // Transform fields array to data object (partial update) using modular transformation
+                    // Pass resource to handle resource-specific transformations (e.g., Person.name is FullName, Company.name is String)
+                    const fieldsData = transformFieldsData(fieldsParam.field || [], resource);
 
                     // Build and execute update mutation
                     const { query, variables } = buildUpdateMutation(

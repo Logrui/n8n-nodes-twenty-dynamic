@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "0.1.11",
+  "version": "0.3.5",
   "description": "n8n node to call Twenty CRM's API",
   "keywords": [
     "n8n-community-node-package"
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/Logrui/n8n-nodes-twenty-dynamic",
   "author": {
     "name": "Logrui",
-    "email": "steven@hodgolabs.com"
+    "email": "yhcsanctioqn@gmail.com"
   },
   "repository": {
     "type": "git",

@@ -1,77 +1,112 @@
-# Twenty GraphQL API Tests
+# n8n-nodes-twenty
 
-Unit tests for understanding Twenty CRM GraphQL API behavior without n8n complexity.
+This is an n8n community node for **Twenty CRM** that uses dynamic schema discovery and enables working with Standard AND Custom data objects and fields
 
-## Quick Start
+⚠️ BETA VERSION - Under Active Development - Do not use for production workflows
 
-```bash
-cd tests
-npm install
-cp .env.example .env
-# Edit .env with your TWENTY_API_KEY and TWENTY_URL
+[Twenty CRM](https://twenty.com/) is an open-source CRM (customer relationship management) tool that is under rapid development. Please consider this as a **Alpha/Beta** release that is likely to break with future changes in the Twenty API.
 
-# Run all tests
-npm run test:resources        # Part 1: Test resource query (39 objects)
-npm run test:fields           # Part 2: Test metadata fields query (8 fields - INCOMPLETE)
-npm run test:introspect       # Part 3: Introspect metadata schema
-npm run test:data             # Part 4: Query actual Company data (17 fields)
-npm run test:data-introspect  # Part 5: Introspect data schema (29 fields - COMPLETE!)
-```
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-## Test Results Summary
+[Installation](#installation)  
+[Operations](#operations)  
+[Credentials](#credentials)  
+[Compatibility](#compatibility)  
+[Resources](#resources)  
+[Credit](#credit)  
+[Version history](#version-history)  
 
-| Test | Endpoint | Result | Fields Found |
-|------|----------|--------|--------------|
-| Part 1: Resources | `/metadata` | ✅ Success | 39 objects |
-| Part 2: Metadata Fields | `/metadata` | ⚠️ Incomplete | 8 fields |
-| Part 3: Metadata Introspection | `/metadata` | ✅ Success | Filter options |
-| Part 4: Data Query | `/graphql` | ✅ Success | 17 fields |
-| Part 5: **Data Introspection** | `/graphql` | ✅ **COMPLETE** | **29 fields** |
+## Installation
 
-## Critical Finding
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-**The `/metadata` endpoint only returns 8 custom fields, but the `/graphql` data schema has ALL 29 fields!**
+Settings -> Community Nodes -> Install -> n8n-nodes-twenty-dynamic
 
-### Missing from Metadata (21 fields):
-- `id`, `name` - Most critical!
-- `createdAt`, `updatedAt`, `deletedAt` - Timestamps
-- `accountOwner`, `accountOwnerId`, `createdBy` - Relations
-- `linkedinLink`, `xLink`, `website`, `cvcWebsite` - Links
-- `idealCustomerProfile`, `position`, `searchVector`, `hasCvc`, `category` - Standard fields
-- `people`, `taskTargets`, `noteTargets`, `attachments` - Additional relations
+## Bug Reporting and Features Requests
 
-## Recommended Solution for n8n Node
 
-**Use a hybrid approach:**
+## Standard Operations
+    - General
+    - Api Keys
+    - Attachments
+    - Blocklists
+    - Calendar Channel Event Associations
+    - Calendar Channels
+    - Calendar Event Participants
+    - Calendar Events
+    - Companies
+    - Connected Accounts
+    - Favorite Folders
+    - Favorites
+    - Message Channel Message Associations
+    - Message Channels
+    - Message Folders
+    - Message Participants
+    - Messages
+    - Message Threads
+    - Notes
+    - Note Targets
+    - Opportunities
+    - People
+    - Tasks
+    - Task Targets
+    - Timeline Activities
+    - View Fields
+    - View Filter Groups
+    - View Filters
+    - View Groups
+    - Views
+    - View Sorts
+    - Webhooks
+    - Workflow Automated Triggers
+    - Workflow Runs
+    - Workflows
+    - Workflow Versions
+    - Workspace Members
 
-1. **Object Discovery:** Query `/metadata` for available objects (works perfectly)
-   ```graphql
-   query { objects(paging: { first: 200 }) { ... } }
-   ```
+## Dynamic Operations
+    -Support for majority of custom objects and fields. Certain complex fields that are objects are still being WIP
 
-2. **Field Discovery:** Use GraphQL introspection on `/graphql` for complete field list
-   ```graphql
-   query { __type(name: "Company") { fields { name type { ... } } } }
-   ```
 
-This gives us:
-- ✅ All 29 fields instead of only 8
-- ✅ Dynamic discovery (no hardcoded field lists)
-- ✅ Accurate field types from schema
-- ✅ Works with both standard and custom objects
+## ROADMAP
+    -Dynamic Field Integrations for All Standard and Custom Data Models
+    -Standard and Custom Object Retrieval [x]
+    -Standard Integrated Operations
+        -Standard CRUD Operations
+        -Standard Integrations
+            -List people by Company
+            -Get notes by Company
+            -Get notes by Person
+    -Operations:
+        -Create One by ID
+        -Delete One by ID
+        -Get One by ID
+        -Find One by Name
+        -List/Search
+        -Update One
 
-## Test Files
+## Credentials
 
-- `graphql_twenty_resources_call.ts` - Resource dropdown population test
-- `graphql_twenty_fields_call.ts` - Company fields retrieval test (to be created)
-- `.env.example` - Example environment configuration
-- `package.json` - Test dependencies and scripts
-- `tsconfig.json` - TypeScript configuration
+Generate an API key in Twenty by following the [Twenty docs](https://twenty.com/user-guide/section/functions/api-webhooks). In summary, create an API key in the Settings -> Developers section.
 
-## Purpose
+Copy the API key. Click 'Add Credential' in n8n and search for 'Twenty API'. Provide the API key and your Twenty domain (e.g. http://localhost:5020, https://n8n.example.org). Do _not_ use the 'API Base URL', e.g. https://n8n.example.org/rest/.
 
-These tests help us:
-1. Understand the exact GraphQL queries needed
-2. See the raw API responses
-3. Debug field visibility issues
-4. Validate query structure before integration
+## Compatibility
+
+Compatible and tested with Twenty v1.0.3 and n8n v1.91.3.
+
+## Resources
+
+* [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+* [Twenty developer documentation](https://twenty.com/developers/)
+
+## Version history
+
+
+## Credit
+Dynamic node and custom objects integration credit goes to [s-yhc](https://github.com/s-yhc/n8n-nodes-twenty-dynamic)
+
+Previous versions and learnings from [devlikeapro](https://github.com/devlikeapro/n8n-openapi-node) for the work on generic n8n nodebuilders for OpenAPI specs. 
+
+Previous versions relied on similar tools from [ivov](https://github.com/ivov) and [feelgood-interface](https://github.com/feelgood-interface).
+

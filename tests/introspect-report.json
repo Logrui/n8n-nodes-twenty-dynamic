@@ -1,0 +1,1027 @@
+{
+  "company": {
+    "metadata": {
+      "id": "23a02344-6ae5-4959-88d1-f3c19130777d",
+      "nameSingular": "company",
+      "namePlural": "companies",
+      "labelSingular": "Company",
+      "labelPlural": "Companies",
+      "description": "A company",
+      "fields": {
+        "edges": [
+          {
+            "node": {
+              "id": "29647541-7a26-4912-8dfe-efd54a8ab418",
+              "name": "annualRecurringRevenue",
+              "label": "ARR",
+              "type": "CURRENCY",
+              "description": "Annual Recurring Revenue: The actual or estimated annual revenue of the company",
+              "isNullable": true,
+              "defaultValue": {
+                "amountMicros": null,
+                "currencyCode": "''"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "69ccf988-93e2-4d1c-9d40-cf5a5006a9bb",
+              "name": "address",
+              "label": "Address",
+              "type": "ADDRESS",
+              "description": "Address of the company",
+              "isNullable": true,
+              "defaultValue": {
+                "addressLat": null,
+                "addressLng": null,
+                "addressCity": "''",
+                "addressState": "''",
+                "addressCountry": "''",
+                "addressStreet1": "''",
+                "addressStreet2": "''",
+                "addressPostcode": "''"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "e42ac781-74fb-49a1-979d-b647d8a4ee62",
+              "name": "status",
+              "label": "Status",
+              "type": "SELECT",
+              "description": null,
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "20df7fff-bdba-4e5f-a576-1c74b6a4747d",
+              "name": "employees",
+              "label": "Employees",
+              "type": "NUMBER",
+              "description": "Number of employees in the company",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "ca577db2-e89b-4bec-84a6-d0fb1512dcf4",
+              "name": "domainName",
+              "label": "Domain Name",
+              "type": "LINKS",
+              "description": "The company website URL. We use this url to fetch the company icon",
+              "isNullable": false,
+              "defaultValue": {
+                "primaryLinkUrl": "''",
+                "secondaryLinks": null,
+                "primaryLinkLabel": "''"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "4ee21b84-d26b-4ea7-9374-522f930c621e",
+              "name": "favorites",
+              "label": "Favorites",
+              "type": "RELATION",
+              "description": "Favorites linked to the company",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "fd92bf58-a39b-4340-a939-426e05c38f13",
+              "name": "opportunities",
+              "label": "Opportunities",
+              "type": "RELATION",
+              "description": "Opportunities linked to the company.",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "399f1aa4-b273-4cd4-b646-d079cc67f42c",
+              "name": "timelineActivities",
+              "label": "Timeline Activities",
+              "type": "RELATION",
+              "description": "Timeline Activities linked to the company",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          }
+        ]
+      }
+    },
+    "fieldsByType": {
+      "FULL_NAME": [],
+      "LINKS": [
+        {
+          "id": "ca577db2-e89b-4bec-84a6-d0fb1512dcf4",
+          "name": "domainName",
+          "label": "Domain Name",
+          "type": "LINKS",
+          "description": "The company website URL. We use this url to fetch the company icon",
+          "isNullable": false,
+          "defaultValue": {
+            "primaryLinkUrl": "''",
+            "secondaryLinks": null,
+            "primaryLinkLabel": "''"
+          }
+        }
+      ],
+      "CURRENCY": [
+        {
+          "id": "29647541-7a26-4912-8dfe-efd54a8ab418",
+          "name": "annualRecurringRevenue",
+          "label": "ARR",
+          "type": "CURRENCY",
+          "description": "Annual Recurring Revenue: The actual or estimated annual revenue of the company",
+          "isNullable": true,
+          "defaultValue": {
+            "amountMicros": null,
+            "currencyCode": "''"
+          }
+        }
+      ],
+      "ADDRESS": [
+        {
+          "id": "69ccf988-93e2-4d1c-9d40-cf5a5006a9bb",
+          "name": "address",
+          "label": "Address",
+          "type": "ADDRESS",
+          "description": "Address of the company",
+          "isNullable": true,
+          "defaultValue": {
+            "addressLat": null,
+            "addressLng": null,
+            "addressCity": "''",
+            "addressState": "''",
+            "addressCountry": "''",
+            "addressStreet1": "''",
+            "addressStreet2": "''",
+            "addressPostcode": "''"
+          }
+        }
+      ],
+      "TEXT": [],
+      "NUMBER": [
+        {
+          "id": "20df7fff-bdba-4e5f-a576-1c74b6a4747d",
+          "name": "employees",
+          "label": "Employees",
+          "type": "NUMBER",
+          "description": "Number of employees in the company",
+          "isNullable": true,
+          "defaultValue": null
+        }
+      ],
+      "DATE_TIME": [],
+      "BOOLEAN": [],
+      "RELATION": [
+        {
+          "id": "4ee21b84-d26b-4ea7-9374-522f930c621e",
+          "name": "favorites",
+          "label": "Favorites",
+          "type": "RELATION",
+          "description": "Favorites linked to the company",
+          "isNullable": true,
+          "defaultValue": null
+        },
+        {
+          "id": "fd92bf58-a39b-4340-a939-426e05c38f13",
+          "name": "opportunities",
+          "label": "Opportunities",
+          "type": "RELATION",
+          "description": "Opportunities linked to the company.",
+          "isNullable": true,
+          "defaultValue": null
+        },
+        {
+          "id": "399f1aa4-b273-4cd4-b646-d079cc67f42c",
+          "name": "timelineActivities",
+          "label": "Timeline Activities",
+          "type": "RELATION",
+          "description": "Timeline Activities linked to the company",
+          "isNullable": true,
+          "defaultValue": null
+        }
+      ],
+      "SELECT": [
+        {
+          "id": "e42ac781-74fb-49a1-979d-b647d8a4ee62",
+          "name": "status",
+          "label": "Status",
+          "type": "SELECT",
+          "description": null,
+          "isNullable": true,
+          "defaultValue": null
+        }
+      ],
+      "MULTI_SELECT": [],
+      "OTHER": []
+    },
+    "schema": {
+      "name": "Company",
+      "kind": "OBJECT",
+      "description": "A company",
+      "fields": [
+        {
+          "name": "status",
+          "description": null,
+          "type": {
+            "name": "CompanyStatusEnum",
+            "kind": "ENUM",
+            "ofType": null
+          }
+        },
+        {
+          "name": "hasCvc",
+          "description": null,
+          "type": {
+            "name": "Boolean",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "name",
+          "description": "The company name",
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "domainName",
+          "description": "The company website URL. We use this url to fetch the company icon",
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "employees",
+          "description": "Number of employees in the company",
+          "type": {
+            "name": "Float",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "linkedinLink",
+          "description": "The company Linkedin account",
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "annualRecurringRevenue",
+          "description": "Annual Recurring Revenue: The actual or estimated annual revenue of the company",
+          "type": {
+            "name": "Currency",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "address",
+          "description": "Address of the company",
+          "type": {
+            "name": "Address",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "idealCustomerProfile",
+          "description": "Ideal Customer Profile:  Indicates whether the company is the most suitable and valuable customer for you",
+          "type": {
+            "name": "Boolean",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "position",
+          "description": "Company record position",
+          "type": {
+            "name": "Position",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "createdBy",
+          "description": "The creator of the record",
+          "type": {
+            "name": "Actor",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "searchVector",
+          "description": "Field used for full-text search",
+          "type": {
+            "name": "TSVector",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "id",
+          "description": "Id",
+          "type": {
+            "name": "UUID",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "createdAt",
+          "description": "Creation date",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "updatedAt",
+          "description": "Last time the record was changed",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "deletedAt",
+          "description": "Date when the record was deleted",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "xLink",
+          "description": "The company Twitter/X account",
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "website",
+          "description": null,
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "cvcWebsite",
+          "description": null,
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "accountOwnerId",
+          "description": "Your team member responsible for managing the company account",
+          "type": {
+            "name": "ID",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "category",
+          "description": null,
+          "type": {
+            "name": null,
+            "kind": "LIST",
+            "ofType": {
+              "name": "CompanyCategoryEnum",
+              "kind": "ENUM",
+              "ofType": null
+            }
+          }
+        },
+        {
+          "name": "people",
+          "description": "People linked to the company.",
+          "type": {
+            "name": "PersonConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "accountOwner",
+          "description": "Your team member responsible for managing the company account",
+          "type": {
+            "name": "WorkspaceMember",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "taskTargets",
+          "description": "Tasks tied to the company",
+          "type": {
+            "name": "TaskTargetConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "noteTargets",
+          "description": "Notes tied to the company",
+          "type": {
+            "name": "NoteTargetConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "opportunities",
+          "description": "Opportunities linked to the company.",
+          "type": {
+            "name": "OpportunityConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "favorites",
+          "description": "Favorites linked to the company",
+          "type": {
+            "name": "FavoriteConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "attachments",
+          "description": "Attachments linked to the company",
+          "type": {
+            "name": "AttachmentConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "timelineActivities",
+          "description": "Timeline Activities linked to the company",
+          "type": {
+            "name": "TimelineActivityConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "nameField": {
+      "name": "name",
+      "description": "The company name",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    }
+  },
+  "people": {
+    "metadata": {
+      "id": "9c9ac979-69da-4959-bd08-2de96d0493e8",
+      "nameSingular": "person",
+      "namePlural": "people",
+      "labelSingular": "Person",
+      "labelPlural": "People",
+      "description": "A person",
+      "fields": {
+        "edges": [
+          {
+            "node": {
+              "id": "1d9b2dad-1fd4-4059-9a1c-751225fef72a",
+              "name": "updatedAt",
+              "label": "Last update",
+              "type": "DATE_TIME",
+              "description": "Last time the record was changed",
+              "isNullable": false,
+              "defaultValue": "now"
+            }
+          },
+          {
+            "node": {
+              "id": "47a70591-f393-45af-9b5f-dd24523f0ef7",
+              "name": "taskTargets",
+              "label": "Tasks",
+              "type": "RELATION",
+              "description": "Tasks tied to the contact",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "6b4ee38b-0872-460a-ae2e-d412d2d51274",
+              "name": "searchVector",
+              "label": "Search vector",
+              "type": "TS_VECTOR",
+              "description": "Field used for full-text search",
+              "isNullable": true,
+              "defaultValue": null
+            }
+          },
+          {
+            "node": {
+              "id": "a4fa2f31-b2fd-460a-803c-93804c9c639d",
+              "name": "linkedinLink",
+              "label": "Linkedin",
+              "type": "LINKS",
+              "description": "Contact’s Linkedin account",
+              "isNullable": true,
+              "defaultValue": {
+                "primaryLinkUrl": "''",
+                "secondaryLinks": null,
+                "primaryLinkLabel": "''"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "96352da8-6727-48ed-810d-20f6921a5b46",
+              "name": "fullName",
+              "label": "Full Name",
+              "type": "TEXT",
+              "description": null,
+              "isNullable": false,
+              "defaultValue": "''"
+            }
+          },
+          {
+            "node": {
+              "id": "514462c3-54ca-4d79-b0f1-6ad0a0c11a4b",
+              "name": "notes",
+              "label": "Notes",
+              "type": "TEXT",
+              "description": null,
+              "isNullable": false,
+              "defaultValue": "''"
+            }
+          },
+          {
+            "node": {
+              "id": "35bc2ace-0533-43c8-a957-912d84197fc7",
+              "name": "emails",
+              "label": "Emails",
+              "type": "EMAILS",
+              "description": "Contact’s Emails",
+              "isNullable": false,
+              "defaultValue": {
+                "primaryEmail": "''",
+                "additionalEmails": null
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "970ef9b8-2ce3-4e45-aefd-7743ca7f61e6",
+              "name": "city",
+              "label": "City",
+              "type": "TEXT",
+              "description": "Contact’s city",
+              "isNullable": false,
+              "defaultValue": "''"
+            }
+          },
+          {
+            "node": {
+              "id": "c0c0fb6b-3ae7-4766-a3b5-14c93958e26d",
+              "name": "category",
+              "label": "Category",
+              "type": "MULTI_SELECT",
+              "description": null,
+              "isNullable": true,
+              "defaultValue": null
+            }
+          }
+        ]
+      }
+    },
+    "fieldsByType": {
+      "FULL_NAME": [],
+      "LINKS": [
+        {
+          "id": "a4fa2f31-b2fd-460a-803c-93804c9c639d",
+          "name": "linkedinLink",
+          "label": "Linkedin",
+          "type": "LINKS",
+          "description": "Contact’s Linkedin account",
+          "isNullable": true,
+          "defaultValue": {
+            "primaryLinkUrl": "''",
+            "secondaryLinks": null,
+            "primaryLinkLabel": "''"
+          }
+        }
+      ],
+      "CURRENCY": [],
+      "ADDRESS": [],
+      "TEXT": [
+        {
+          "id": "96352da8-6727-48ed-810d-20f6921a5b46",
+          "name": "fullName",
+          "label": "Full Name",
+          "type": "TEXT",
+          "description": null,
+          "isNullable": false,
+          "defaultValue": "''"
+        },
+        {
+          "id": "514462c3-54ca-4d79-b0f1-6ad0a0c11a4b",
+          "name": "notes",
+          "label": "Notes",
+          "type": "TEXT",
+          "description": null,
+          "isNullable": false,
+          "defaultValue": "''"
+        },
+        {
+          "id": "970ef9b8-2ce3-4e45-aefd-7743ca7f61e6",
+          "name": "city",
+          "label": "City",
+          "type": "TEXT",
+          "description": "Contact’s city",
+          "isNullable": false,
+          "defaultValue": "''"
+        }
+      ],
+      "NUMBER": [],
+      "DATE_TIME": [
+        {
+          "id": "1d9b2dad-1fd4-4059-9a1c-751225fef72a",
+          "name": "updatedAt",
+          "label": "Last update",
+          "type": "DATE_TIME",
+          "description": "Last time the record was changed",
+          "isNullable": false,
+          "defaultValue": "now"
+        }
+      ],
+      "BOOLEAN": [],
+      "RELATION": [
+        {
+          "id": "47a70591-f393-45af-9b5f-dd24523f0ef7",
+          "name": "taskTargets",
+          "label": "Tasks",
+          "type": "RELATION",
+          "description": "Tasks tied to the contact",
+          "isNullable": true,
+          "defaultValue": null
+        }
+      ],
+      "SELECT": [],
+      "MULTI_SELECT": [
+        {
+          "id": "c0c0fb6b-3ae7-4766-a3b5-14c93958e26d",
+          "name": "category",
+          "label": "Category",
+          "type": "MULTI_SELECT",
+          "description": null,
+          "isNullable": true,
+          "defaultValue": null
+        }
+      ],
+      "OTHER": [
+        {
+          "id": "6b4ee38b-0872-460a-ae2e-d412d2d51274",
+          "name": "searchVector",
+          "label": "Search vector",
+          "type": "TS_VECTOR",
+          "description": "Field used for full-text search",
+          "isNullable": true,
+          "defaultValue": null
+        },
+        {
+          "id": "35bc2ace-0533-43c8-a957-912d84197fc7",
+          "name": "emails",
+          "label": "Emails",
+          "type": "EMAILS",
+          "description": "Contact’s Emails",
+          "isNullable": false,
+          "defaultValue": {
+            "primaryEmail": "''",
+            "additionalEmails": null
+          }
+        }
+      ]
+    },
+    "schema": {
+      "name": "Person",
+      "kind": "OBJECT",
+      "description": "A person",
+      "fields": [
+        {
+          "name": "topicsOfInterest",
+          "description": null,
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "source",
+          "description": null,
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "notes",
+          "description": null,
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "category",
+          "description": null,
+          "type": {
+            "name": null,
+            "kind": "LIST",
+            "ofType": {
+              "name": "PersonCategoryEnum",
+              "kind": "ENUM",
+              "ofType": null
+            }
+          }
+        },
+        {
+          "name": "fullName",
+          "description": null,
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "name",
+          "description": "Contact’s name",
+          "type": {
+            "name": "FullName",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "emails",
+          "description": "Contact’s Emails",
+          "type": {
+            "name": "Emails",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "linkedinLink",
+          "description": "Contact’s Linkedin account",
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "jobTitle",
+          "description": "Contact’s job title",
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "phones",
+          "description": "Contact’s phone numbers",
+          "type": {
+            "name": "Phones",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "city",
+          "description": "Contact’s city",
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "avatarUrl",
+          "description": "Contact’s avatar",
+          "type": {
+            "name": "String",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "position",
+          "description": "Person record Position",
+          "type": {
+            "name": "Position",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "createdBy",
+          "description": "The creator of the record",
+          "type": {
+            "name": "Actor",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "searchVector",
+          "description": "Field used for full-text search",
+          "type": {
+            "name": "TSVector",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "id",
+          "description": "Id",
+          "type": {
+            "name": "UUID",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "createdAt",
+          "description": "Creation date",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "updatedAt",
+          "description": "Last time the record was changed",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "deletedAt",
+          "description": "Date when the record was deleted",
+          "type": {
+            "name": "DateTime",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "xLink",
+          "description": "Contact’s X/Twitter account",
+          "type": {
+            "name": "Links",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "companyId",
+          "description": "Contact’s company",
+          "type": {
+            "name": "ID",
+            "kind": "SCALAR",
+            "ofType": null
+          }
+        },
+        {
+          "name": "company",
+          "description": "Contact’s company",
+          "type": {
+            "name": "Company",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "pointOfContactForOpportunities",
+          "description": "List of opportunities for which that person is the point of contact",
+          "type": {
+            "name": "OpportunityConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "taskTargets",
+          "description": "Tasks tied to the contact",
+          "type": {
+            "name": "TaskTargetConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "noteTargets",
+          "description": "Notes tied to the contact",
+          "type": {
+            "name": "NoteTargetConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "favorites",
+          "description": "Favorites linked to the contact",
+          "type": {
+            "name": "FavoriteConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "attachments",
+          "description": "Attachments linked to the contact.",
+          "type": {
+            "name": "AttachmentConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "messageParticipants",
+          "description": "Message Participants",
+          "type": {
+            "name": "MessageParticipantConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "calendarEventParticipants",
+          "description": "Calendar Event Participants",
+          "type": {
+            "name": "CalendarEventParticipantConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        },
+        {
+          "name": "timelineActivities",
+          "description": "Events linked to the person",
+          "type": {
+            "name": "TimelineActivityConnection",
+            "kind": "OBJECT",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "nameField": {
+      "name": "name",
+      "description": "Contact’s name",
+      "type": {
+        "name": "FullName",
+        "kind": "OBJECT",
+        "ofType": null
+      }
+    }
+  }
+}
