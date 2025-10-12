@@ -1,0 +1,19 @@
+{
+  "name": "n8n-nodes-twenty-dynamic-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unit tests for n8n-nodes-twenty-dynamic",
+  "scripts": {
+    "test:resources": "ts-node graphql_twenty_resources_call.ts",
+    "test:fields": "ts-node graphql_twenty_fields_call.ts",
+    "test:introspect": "ts-node graphql_introspection.ts",
+    "test:data": "ts-node graphql_company_data_query.ts",
+    "test:data-introspect": "ts-node graphql_data_introspection.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.6.2"
+  }
+}

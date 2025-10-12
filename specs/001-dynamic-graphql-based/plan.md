@@ -192,6 +192,11 @@ All implementation decisions align with constitutional principles. No complexity
 8. ✅ Views Integration: Query views endpoint, merge filters with AND logic
 9. ✅ Data Immutability: Clone input items, return new array (never mutate)
 10. ✅ Testing Approach: Manual with 40+ scenario constitutional checklist
+11. ✅ **Field Discovery Method:** Data schema introspection (NOT metadata API)
+    - **Critical Finding**: `/metadata` endpoint only returns custom fields (8 for Company)
+    - **Solution**: GraphQL introspection on `/graphql` endpoint returns ALL fields (29 for Company)
+    - **Test Evidence**: 5 comprehensive unit tests in `tests/` folder
+    - **Implementation**: Use `__type(name: "ObjectName") { fields { name type { ... } } }` query
 
 **Technology Stack**:
 - TypeScript 5.5.3 (strict mode)
@@ -208,7 +213,19 @@ All implementation decisions align with constitutional principles. No complexity
 - Relational dropdowns load <3s for 1000 records
 - Operations complete <30s
 
-**Status**: ✅ All technical unknowns resolved, ready for Phase 1
+**Critical Research Breakthrough (October 12, 2025)**:
+- 🎉 **Field Discovery Blocker Resolved**
+- Created 5 unit tests to isolate the issue:
+  * Part 1: Resources from `/metadata` → ✅ 39 objects
+  * Part 2: Fields from `/metadata` → ⚠️ Only 8 fields
+  * Part 3: Metadata introspection → ✅ Filter options discovered
+  * Part 4: Actual data query from `/graphql` → ✅ 17 fields visible
+  * Part 5: Data schema introspection → ✅ ALL 29 fields!
+- **Root Cause**: `/metadata` endpoint designed for custom field management only
+- **Solution**: Switch to data schema introspection for complete field coverage
+- **Documentation**: `tests/TEST_RESULTS.md` (detailed analysis), `tests/SOLUTION.md` (implementation guide)
+
+**Status**: ✅ All technical unknowns resolved, field discovery solution validated, ready for implementation
 
 ---
 
@@ -270,17 +287,31 @@ All implementation decisions align with constitutional principles. No complexity
 
 ## Next Steps
 
-**Immediate**: Execute `speckit.tasks` command to break down implementation into actionable tasks
+**Immediate**: Implement data schema introspection to resolve field discovery
+
+**Critical Tasks (Priority 1)**:
+- Implement `getDataSchemaForObject()` function in `TwentyApi.client.ts`
+- Update `getFieldsForResource()` to use data introspection instead of metadata
+- Add GraphQL type mapping helpers (`mapGraphQLTypeToTwentyType`, `isReadOnlyField`)
+- Test with Company, Person, and custom objects
+- Publish v0.2.0 with complete field discovery (all 29 fields)
 
 **Future Phases**:
-- Phase 2: Implement credential definition (`TwentyApi.credentials.ts`)
-- Phase 3: Implement core node structure (`Twenty.node.ts` skeleton)
-- Phase 4: Implement schema discovery and caching
-- Phase 5: Implement CRUD operations
-- Phase 6: Implement filter builder
-- Phase 7: Testing and refinement
+- Phase 3: Implement relational field dropdowns (US4)
+- Phase 4: Implement visual filter builder (US3)
+- Phase 5: Implement views integration (US5)
+- Phase 6: Testing and refinement
+- Phase 7: Production release (v1.0.0)
 
-**Ready for**: Task breakdown and implementation start
+**Test Infrastructure**: All unit tests ready in `tests/` folder
+```bash
+npm run test:resources        # Part 1: Resource query
+npm run test:fields           # Part 2: Metadata fields (incomplete)
+npm run test:data             # Part 4: Actual data query
+npm run test:data-introspect  # Part 5: Complete solution!
+```
+
+**Ready for**: Data schema introspection implementation
 
 ---
 

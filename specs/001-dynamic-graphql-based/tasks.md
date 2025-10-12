@@ -43,6 +43,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
+**🎉 FIELD DISCOVERY SOLUTION FOUND (October 12, 2025)**:
+- Created 5 unit tests in `tests/` folder to isolate field visibility issue
+- **Root Cause**: `/metadata` endpoint only returns custom fields (8 for Company)
+- **Solution**: Data schema introspection on `/graphql` endpoint returns ALL fields (29 for Company)
+- **Test Results**: See `tests/TEST_RESULTS.md` and `tests/SOLUTION.md`
+- **Next Step**: Implement data schema introspection function (new tasks T010a, T010b)
+
 ### Core Helper Functions
 
 - [x] T008 [P] **[Foundation]** Implement `twentyApiRequest()` wrapper in `nodes/Twenty/TwentyApi.client.ts`
@@ -55,12 +62,38 @@
   - Query Twenty `/metadata` endpoint with objects/fields GraphQL query
   - Parse response into ObjectMetadata/FieldMetadata structures
   - Return normalized schema object
+  - **NOTE**: This function works for object discovery (39 objects) but NOT field discovery (only 8 custom fields returned)
 
 - [x] T010 **[Foundation]** Implement `getCachedSchema()` with TTL logic in `nodes/Twenty/TwentyApi.client.ts`
   - Check credential data for existing schemaCache and cacheTimestamp
   - If cache age < 10 minutes AND forceRefresh is false: return cached schema
   - Else: call `getSchemaMetadata()`, store in credential data with timestamp, return fresh schema
   - Handle cache invalidation when domain changes
+
+- [ ] T010a **[Foundation - NEW]** Implement `getDataSchemaForObject()` function in `nodes/Twenty/TwentyApi.client.ts`
+  - **Purpose**: Replace metadata-based field discovery with data schema introspection
+  - Query `/graphql` endpoint (not `/metadata`) with introspection query:
+    ```graphql
+    query { __type(name: "Company") { fields { name description type { name kind ofType { name kind } } } } }
+    ```
+  - Accept: objectNameSingular (e.g., "company"), capitalize to match GraphQL type (e.g., "Company")
+  - Parse introspection response to extract all 29 fields (not just 8 from metadata)
+  - Return array of IFieldMetadata with complete field information
+  - **Test Evidence**: `npm run test:data-introspect` shows 29 fields vs 8 from metadata
+  - **Implementation Guide**: See `tests/SOLUTION.md` for complete code examples
+
+- [ ] T010b **[Foundation - NEW]** Implement type mapping helpers in `nodes/Twenty/TwentyApi.client.ts`
+  - **mapGraphQLTypeToTwentyType(graphQLType)**: Convert GraphQL types to Twenty field types
+    * String → TEXT, Int/Float → NUMBER, Boolean → BOOLEAN, UUID → UUID
+    * DateTime → DATE_TIME, Position → POSITION, TSVector → TEXT
+    * Links → LINKS, Address → ADDRESS, Currency → CURRENCY, FullName → FULL_NAME
+    * *Connection (e.g., PersonConnection) → RELATION
+    * *Enum (e.g., CompanyStatusEnum) → SELECT
+  - **isReadOnlyField(fieldName)**: Identify non-writable fields
+    * Read-only: id, createdAt, updatedAt, deletedAt, position, searchVector
+    * Writable: all other fields
+  - **capitalize(str)**: Convert "company" to "Company" for GraphQL type names
+  - **humanize(str)**: Convert camelCase to Title Case for labels (accountOwnerId → Account Owner Id)
 
 ### Node Base Structure
 
@@ -116,6 +149,60 @@
 **Checkpoint**: ✅ User Story 1 complete - users can discover and see all custom objects in Resource dropdown
 
 **Deliverable**: Dynamic schema discovery with caching - READY FOR MVP RELEASE
+
+---
+
+## Phase 3.5: Field Discovery Enhancement (Critical Fix)
+
+**Goal**: Implement data schema introspection to access ALL 29 fields instead of only 8 custom fields from metadata API.
+
+**Background**: Comprehensive testing revealed that `/metadata` endpoint only returns custom fields. The solution is to use GraphQL introspection on `/graphql` endpoint.
+
+**Test Evidence**:
+- ✅ `npm run test:resources` → 39 objects from metadata API
+- ⚠️ `npm run test:fields` → Only 8 custom fields from metadata API
+- ✅ `npm run test:data` → 17 fields visible in actual data queries
+- ✅ `npm run test:data-introspect` → **ALL 29 fields via introspection!**
+
+**Documentation**: See `tests/TEST_RESULTS.md` (detailed analysis) and `tests/SOLUTION.md` (implementation guide)
+
+### Implementation Tasks
+
+- [ ] T020a **[Field Discovery]** Implement `getDataSchemaForObject()` in `nodes/Twenty/TwentyApi.client.ts`
+  - Query `/graphql` endpoint with introspection: `__type(name: "Company") { fields { ... } }`
+  - Accept objectNameSingular, capitalize to GraphQL type name (company → Company)
+  - Parse all field definitions from introspection response
+  - Map GraphQL field types to Twenty types using `mapGraphQLTypeToTwentyType()`
+  - Mark read-only fields using `isReadOnlyField()`
+  - Return complete IFieldMetadata array (29 fields for Company)
+
+- [ ] T020b **[Field Discovery]** Implement helper functions in `nodes/Twenty/TwentyApi.client.ts`
+  - `capitalize(str: string)`: Convert first letter to uppercase for GraphQL type names
+  - `humanize(str: string)`: Convert camelCase to Title Case (accountOwnerId → Account Owner Id)
+  - `mapGraphQLTypeToTwentyType(type: any)`: Map GraphQL types to Twenty field types
+    * Scalars: String→TEXT, Int/Float→NUMBER, Boolean→BOOLEAN, UUID→UUID, DateTime→DATE_TIME
+    * Objects: Links→LINKS, Address→ADDRESS, Currency→CURRENCY, FullName→FULL_NAME
+    * Relations: *Connection→RELATION (e.g., PersonConnection→RELATION)
+    * Enums: *Enum→SELECT (e.g., CompanyStatusEnum→SELECT)
+  - `isReadOnlyField(name: string)`: Return true for id, createdAt, updatedAt, deletedAt, position, searchVector
+
+- [ ] T020c **[Field Discovery]** Update `loadOptions.getFieldsForResource()` in `nodes/Twenty/Twenty.node.ts`
+  - **Replace** metadata-based field retrieval with data schema introspection
+  - Call `getDataSchemaForObject(resourceValue)` instead of using cached schema
+  - Filter based on operation: Create/Update = writable only, Get/List = all fields
+  - Sort: standard fields first (id, name, createdAt, updatedAt), then custom alphabetically
+  - Add descriptions showing type and nullability: "Type: TEXT | Nullable: false"
+
+- [ ] T020d **[Field Discovery]** Test introspection implementation
+  - Verify Company object shows all 29 fields in dropdown (not just 8)
+  - Verify critical fields appear: id, name, createdAt, updatedAt, accountOwner
+  - Verify field types are correctly mapped (Links, Address, Currency, Relations)
+  - Test with Person, Opportunity, and custom objects
+  - Document test results
+
+**Checkpoint**: ✅ Field discovery complete - all 29 fields accessible for any object
+
+**Deliverable**: Complete field access - UNBLOCKS User Story 2 runtime testing
 
 ---
 
@@ -624,27 +711,43 @@ Phase 1 (Setup) → Phase 2 (Foundation) → Phase 3 (US1) + Phase 4 (US2)
 
 ### MVP Scope (Minimal Viable Product)
 
-**Includes**:
-- ✅ User Story 1: Auto-Discover Custom Objects
-- ✅ User Story 2: CRUD Operations (Create, Get, Update, Delete, List/Search basic)
+**Current Status**: BLOCKED by field discovery - solution identified, implementation pending
 
-**MVP Deliverable**: Users can perform all CRUD operations on any standard or custom object with automatic schema discovery.
+**Includes**:
+- ✅ User Story 1: Auto-Discover Custom Objects (COMPLETE - 39 objects)
+- ⏸️ User Story 2: CRUD Operations (Code complete, testing blocked by field visibility)
+
+**Critical Fix Required** (Phase 3.5):
+- 🔧 Implement data schema introspection (Tasks T020a-T020d)
+- 🎯 Goal: Access all 29 fields instead of only 8
+- 📊 Test Evidence: `tests/TEST_RESULTS.md` and `tests/SOLUTION.md`
+- ⏱️ Estimated: 1-2 days implementation + testing
+
+**MVP Deliverable**: Users can perform all CRUD operations on any standard or custom object with automatic schema discovery and access to ALL fields.
 
 **Excludes from MVP**:
 - ❌ User Story 3: Visual filter builder (can search without filters)
 - ❌ User Story 4: Relational dropdowns (can enter IDs manually)
 - ❌ User Story 5: Views integration (can use custom filters)
 
-**Rationale**: MVP delivers core value (CRUD + custom objects) while deferring UX enhancements that can be added incrementally.
+**Rationale**: MVP delivers core value (CRUD + custom objects + complete field access) while deferring UX enhancements that can be added incrementally.
 
 ### Incremental Delivery Plan
 
-**Release 0.1.0** (MVP):
-- Phase 1-4 complete (Setup + Foundation + US1 + US2)
-- ~39 tasks
-- Estimated: 1-2 weeks
+**Release 0.1.x** (Current - Alpha):
+- Phases 1-4 complete (Setup + Foundation + US1 + US2 code)
+- Published versions v0.1.1 through v0.1.11 for testing
+- Status: Field discovery blocker identified and solution validated
+- Next: Implement Phase 3.5 (data schema introspection)
 
-**Release 0.2.0** (Filter Builder):
+**Release 0.2.0** (MVP):
+- Phase 3.5 complete (Field Discovery Enhancement)
+- Phase 4 runtime testing complete (US2 validated with all 29 fields)
+- ~4 new tasks (T020a-T020d)
+- Estimated: 1-2 days implementation + 2-3 days testing
+- **Target**: First production-ready release with complete CRUD functionality
+
+**Release 0.3.0** (Filter Builder):
 - Add Phase 5 (US3)
 - ~11 tasks
 - Estimated: 3-5 days

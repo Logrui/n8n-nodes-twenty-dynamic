@@ -1,3 +1,7 @@
+# Local Development Folders
+.Documentation/
+specs/
+
 # Dependencies
 node_modules/
 
@@ -37,3 +41,6 @@ coverage/
 
 # Package manager
 yarn.lock
+
+.env
+

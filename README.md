@@ -2,11 +2,23 @@
 
 This is an n8n community node for **Twenty CRM** that uses dynamic schema discovery.
 
-⚠️ **ALPHA VERSION - ACTIVE DEVELOPMENT** ⚠️
+⚠️ **ALPHA VERSION - NOT PRODUCTION READY** ⚠️
 
-This node is in active development and currently **not fully functional**. It is being published for testing purposes only. 
+**Current Status (v0.1.11):**
+- ✅ Dynamic schema discovery from Twenty CRM
+- ✅ Basic CRUD operations structure implemented
+- 🧪 **Testing empty filter parameter** - Attempting to retrieve all available fields
+- ⚠️ **Under active development** - API integration being refined
+- ❌ **Do not use in production workflows**
 
-Do not use in production workflows. Goal to be able to load all custom schema for the N8N node which is currently VERY difficult
+This is an early alpha release for testing and development purposes only.
+
+**Known Limitations:**
+- Field loading may not show all available fields for some objects
+- Query execution not fully tested across all field types
+- Custom field type handling in progress
+
+**Feedback Welcome:** If you're testing this node, please report issues on GitHub.
 
 ## About This Project
 
@@ -125,6 +137,40 @@ This node is being developed against Twenty API v0.40+ and n8n v1.91+. Currently
 ## Version History
 
 **Current Development Series (v0.1.x - Dynamic Implementation):**
+
+#### v0.1.11 (October 11, 2025)
+- Added empty filter parameter to fields query
+- Testing if explicit filter retrieves all fields
+
+#### v0.1.10 (October 11, 2025)
+- Enhanced schema field querying
+- Improved field metadata collection
+
+#### v0.1.9 (October 11, 2025)
+- Schema cache refresh improvements
+- Field count debugging
+
+#### v0.1.8 (October 11, 2025)
+- Field filtering adjustments
+- Debug improvements
+
+#### v0.1.7 (October 11, 2025)
+- Testing phase for CRUD operations
+- Field visibility validation
+
+#### v0.1.6 (October 11, 2025)
+- Improved field filtering logic for writable fields
+- Enhanced isWritable calculation
+
+#### v0.1.5 (October 11, 2025)
+Fixed UI visibility:
+- Removed regex-based displayOptions that prevented Operation dropdown from showing
+- Operation selection now always visible after Resource selection
+
+#### v0.1.4 (October 11, 2025)
+Simplified schema query:
+- Removed relation field queries causing GraphQL errors
+- Set relationMetadata to null (basic CRUD doesn't require relation details)
 
 #### v0.1.3 (October 11, 2025)
 Fixed schema discovery query to work with updated Twenty API:

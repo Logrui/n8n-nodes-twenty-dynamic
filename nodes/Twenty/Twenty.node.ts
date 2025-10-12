@@ -67,11 +67,8 @@ export class Twenty implements INodeType {
                 name: 'operation',
                 type: 'options',
                 noDataExpression: true,
-                displayOptions: {
-                    show: {
-                        resource: ['/.*/' as any],
-                    },
-                },
+                // Show operation field when any resource is selected
+                // displayOptions: show when resource field has any value
                 options: [
                     {
                         name: 'Create One',
@@ -242,7 +239,8 @@ export class Twenty implements INodeType {
                     }
 
                     // Get schema with caching
-                    const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
+                    // DEBUG v0.1.9: Force refresh to bypass cache
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, true);
 
                     // Find the object by nameSingular
                     const objectMetadata = schema.objects.find((obj) => obj.nameSingular === resource);
@@ -250,13 +248,14 @@ export class Twenty implements INodeType {
                         throw new NodeOperationError(this.getNode(), `Object "${resource}" not found in schema`);
                     }
 
-                    // Transform writable fields to dropdown options
+                    // Transform fields to dropdown options
+                    // For now, show ALL fields to debug what's being filtered
+                    // TODO: Properly filter read-only/system fields once we understand the schema
                     const options: INodePropertyOptions[] = objectMetadata.fields
-                        .filter((field) => field.isWritable)
                         .map((field) => ({
                             name: field.label || field.name,
                             value: field.name,
-                            description: `Type: ${field.type}${field.isNullable ? ' (optional)' : ' (required)'}`,
+                            description: `Type: ${field.type}${field.isNullable ? ' (optional)' : ' (required)'} [active: ${field.isActive}, system: ${field.isSystem}] (${objectMetadata.fields.length} total)`,
                         }));
 
                     // Sort alphabetically by label

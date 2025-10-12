@@ -13,6 +13,8 @@ export interface IFieldMetadata {
 	type: string;
 	isNullable: boolean;
 	isWritable: boolean;
+	isActive?: boolean;
+	isSystem?: boolean;
 	relationMetadata?: {
 		toObjectMetadata: {
 			nameSingular: string;
@@ -147,7 +149,7 @@ export async function getSchemaMetadata(
 						labelSingular
 						labelPlural
 						isCustom
-						fields(paging: { first: 200 }) {
+						fields(paging: { first: 200 }, filter: {}) {
 							edges {
 								node {
 									id
@@ -156,6 +158,8 @@ export async function getSchemaMetadata(
 									type
 									isNullable
 									isUIReadOnly
+									isActive
+									isSystem
 								}
 							}
 						}
@@ -184,7 +188,12 @@ export async function getSchemaMetadata(
 				type: fieldEdge.node.type,
 				isNullable: fieldEdge.node.isNullable,
 				// isWritable is the inverse of isUIReadOnly
-				isWritable: !fieldEdge.node.isUIReadOnly,
+				// If isUIReadOnly is true, field is NOT writable
+				// If isUIReadOnly is false/null/undefined, field IS writable
+				isWritable: fieldEdge.node.isUIReadOnly !== true,
+				// Additional field metadata for debugging
+				isActive: fieldEdge.node.isActive,
+				isSystem: fieldEdge.node.isSystem,
 				// relationMetadata not available in current API, set to null
 				relationMetadata: null,
 			})),
