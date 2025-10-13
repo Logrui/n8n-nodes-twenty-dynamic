@@ -12,18 +12,16 @@ import { INodeProperties } from 'n8n-workflow';
  * FullName field parameters
  * Used for: name (Person only), pointOfContact
  * Note: Company.name is a simple String, Person.name is a FullName object
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * n8n does NOT support displayOptions on child parameters of fixedCollection/collection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
  */
 export const fullNameFields: INodeProperties[] = [
 	{
 		displayName: 'First Name',
 		name: 'firstName',
 		type: 'string',
-		displayOptions: {
-			show: {
-				resource: ['person'],
-				fieldName: ['name'],
-			},
-		},
 		default: '',
 		description: 'First name / given name',
 		placeholder: 'John',
@@ -32,12 +30,6 @@ export const fullNameFields: INodeProperties[] = [
 		displayName: 'Last Name',
 		name: 'lastName',
 		type: 'string',
-		displayOptions: {
-			show: {
-				resource: ['person'],
-				fieldName: ['name'],
-			},
-		},
 		default: '',
 		description: 'Last name / family name',
 		placeholder: 'Doe',
@@ -47,17 +39,15 @@ export const fullNameFields: INodeProperties[] = [
 /**
  * Links field parameters
  * Used for: domainName, linkedinLink, xLink, website, cvcWebsite
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
  */
 export const linksFields: INodeProperties[] = [
 	{
 		displayName: 'URL',
 		name: 'primaryLinkUrl',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['domainName', 'linkedinLink', 'xLink', 'website', 'cvcWebsite'],
-			},
-		},
 		default: '',
 		description: 'The complete URL',
 		placeholder: 'https://example.com',
@@ -66,11 +56,6 @@ export const linksFields: INodeProperties[] = [
 		displayName: 'Label',
 		name: 'primaryLinkLabel',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['domainName', 'linkedinLink', 'xLink', 'website', 'cvcWebsite'],
-			},
-		},
 		default: '',
 		description: 'Display label for the URL',
 		placeholder: 'example.com',
@@ -80,17 +65,15 @@ export const linksFields: INodeProperties[] = [
 /**
  * Currency field parameters
  * Used for: annualRecurringRevenue
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
  */
 export const currencyFields: INodeProperties[] = [
 	{
 		displayName: 'Amount',
 		name: 'currencyAmount',
 		type: 'number',
-		displayOptions: {
-			show: {
-				fieldName: ['annualRecurringRevenue'],
-			},
-		},
 		default: 0,
 		description: 'Amount in your currency (will be converted to micros automatically)',
 		placeholder: '100000',
@@ -99,11 +82,6 @@ export const currencyFields: INodeProperties[] = [
 		displayName: 'Currency Code',
 		name: 'currencyCode',
 		type: 'options',
-		displayOptions: {
-			show: {
-				fieldName: ['annualRecurringRevenue'],
-			},
-		},
 		options: [
 			{ name: 'Australian Dollar (AUD)', value: 'AUD' },
 			{ name: 'British Pound (GBP)', value: 'GBP' },
@@ -122,17 +100,15 @@ export const currencyFields: INodeProperties[] = [
 /**
  * Address field parameters
  * Used for: address
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
  */
 export const addressFields: INodeProperties[] = [
 	{
 		displayName: 'Street Address 1',
 		name: 'addressStreet1',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'Primary street address',
 		placeholder: '123 Main Street',
@@ -141,11 +117,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'Street Address 2',
 		name: 'addressStreet2',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'Apartment, suite, unit, etc. (optional).',
 		placeholder: 'Suite 100',
@@ -154,11 +125,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'City',
 		name: 'addressCity',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'City or locality',
 		placeholder: 'New York',
@@ -167,11 +133,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'Postal Code',
 		name: 'addressPostcode',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'ZIP or postal code',
 		placeholder: '10001',
@@ -180,11 +141,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'State / Province',
 		name: 'addressState',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'State, province, or region',
 		placeholder: 'NY',
@@ -193,11 +149,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'Country',
 		name: 'addressCountry',
 		type: 'string',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: '',
 		description: 'Country name',
 		placeholder: 'United States',
@@ -206,11 +157,6 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'Latitude',
 		name: 'addressLat',
 		type: 'number',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: undefined,
 		description: 'Geographic latitude (optional)',
 		placeholder: '40.7128',
@@ -219,14 +165,62 @@ export const addressFields: INodeProperties[] = [
 		displayName: 'Longitude',
 		name: 'addressLng',
 		type: 'number',
-		displayOptions: {
-			show: {
-				fieldName: ['address'],
-			},
-		},
 		default: undefined,
 		description: 'Geographic longitude (optional)',
 		placeholder: '-74.0060',
+	},
+];
+
+/**
+ * Emails field parameters
+ * Used for: emails (Person), sentTo (UpcomingEvent)
+ * Note: Only primaryEmail implemented. additionalEmails (JSON array) not implemented.
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
+ */
+export const emailsFields: INodeProperties[] = [
+	{
+		displayName: 'Primary Email',
+		name: 'primaryEmail',
+		type: 'string',
+		default: '',
+		description: 'Primary email address',
+		placeholder: 'john@example.com',
+	},
+];
+
+/**
+ * Phones field parameters
+ * Used for: phones (when added to Person or other objects)
+ * Note: Only primary phone fields implemented. additionalPhones (JSON array) not implemented.
+ * 
+ * IMPORTANT: displayOptions removed because these are children of fixedCollection.
+ * The field visibility is controlled by the parent fixedCollection's fieldName selection.
+ */
+export const phonesFields: INodeProperties[] = [
+	{
+		displayName: 'Primary Phone Number',
+		name: 'primaryPhoneNumber',
+		type: 'string',
+		default: '',
+		placeholder: '+1-555-0123',
+	},
+	{
+		displayName: 'Country Code',
+		name: 'primaryPhoneCountryCode',
+		type: 'string',
+		default: '',
+		description: 'Two-letter country code (ISO 3166-1 alpha-2)',
+		placeholder: 'US',
+	},
+	{
+		displayName: 'Calling Code',
+		name: 'primaryPhoneCallingCode',
+		type: 'string',
+		default: '',
+		description: 'International calling code with plus sign',
+		placeholder: '+1',
 	},
 ];
 
@@ -240,6 +234,8 @@ export function getAllComplexFieldParameters(): INodeProperties[] {
 		...linksFields,
 		...currencyFields,
 		...addressFields,
+		...emailsFields,
+		...phonesFields,
 	];
 }
 

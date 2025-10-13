@@ -4,27 +4,34 @@ This is an n8n community node for **Twenty CRM** that uses dynamic schema discov
 
 🎯 **BETA VERSION - Approaching Production Ready** 🎯
 
-**Current Status (v0.3.4):**
+**Current Status (v0.3.10):**
 - ✅ Dynamic schema discovery from Twenty CRM (metadata + GraphQL introspection)
 - ✅ All CRUD operations fully implemented and tested
-- ✅ Complex field types supported (FullName, Links, Currency, Address)
-- ✅ Resource-aware field rendering (Person.name vs Company.name)
+- ✅ Complex field types supported (FullName, Links, Currency, Address, Emails, Phones)
+- ✅ **Smart field selection** - Field Type suggestions based on Twenty's metadata
+- ✅ **Conditional field display** - only relevant fields appear based on Field Type selection
+- ✅ Clean, intuitive UI with no field clutter
 - ✅ Modular architecture for easy maintenance
 - ✅ Support for Standard AND Custom objects/fields
 - 🧪 **Beta testing** - Core functionality stable, additional features in development
 - ⚠️ **Production use with caution** - Test thoroughly in your environment first
 
 **Recent Improvements (v0.3.x):**
-- Resource-aware field parameters (Person.name shows First/Last Name, Company.name shows simple text)
+- Field selection now shows Twenty field type + suggested n8n Field Type to use (v0.3.10)
+- Added Emails field type (Primary Email) for person.emails and similar fields (v0.3.9)
+- Added Phones field type (Primary Phone Number + Country/Calling Codes) (v0.3.9)
+- Conditional display using path-based displayOptions - only relevant fields show (v0.3.8)
+- Fixed annoying UX bug where 12+ fields appeared for every field selection (v0.3.8)
+- Explicit field type selector - users choose Simple/FullName/Link/Currency/Address/Emails/Phones (v0.3.7-v0.3.9)
+- Fixed critical n8n circular dependency bug preventing field additions (v0.3.6)
 - Complex field types with template-based inputs (no more JSON editing!)
 - Modular codebase with separate field parameter and transformation modules
-- Automatic field type detection and appropriate UI rendering
-- "name" field prioritized in dropdown for better UX
 - GraphQL introspection for accurate field type detection
 
 **Known Limitations:**
 - Advanced filtering UI still basic (can use expressions for complex filters)
-- Some Twenty-specific field types may need additional handling (EMAILS, PHONES, RATING, etc.)
+- Emails/Phones field types only support primary fields (not additionalEmails/additionalPhones arrays)
+- Some Twenty-specific field types may need additional handling (SELECT, MULTI_SELECT, RELATION, etc.)
 - Relational fields work but UI could be improved
 
 **Feedback Welcome:** This node is approaching production readiness. Please report issues on [GitHub](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues).
@@ -249,6 +256,45 @@ Currently in beta testing phase. Compatible with both self-hosted and cloud inst
 ## Version History
 
 **Current Development Series (v0.3.x - Complex Fields & Resource-Aware Implementation):**
+
+#### v0.3.10 (October 12, 2025)
+- **UX IMPROVEMENT:** Field selection dropdown now shows Twenty field type + suggested n8n Field Type
+- Examples: "name (Name) - Twenty Type: FullName → Use 'Full Name' (required)"
+- Helps users choose the correct Field Type without guessing
+- Indicates unsupported types (SELECT, MULTI_SELECT, RELATION)
+
+#### v0.3.9 (October 12, 2025)
+- **NEW FEATURE:** Added Emails field type with Primary Email support
+- **NEW FEATURE:** Added Phones field type with Primary Phone Number, Country Code, and Calling Code
+- Supports person.emails and future emails/phones fields in Twenty CRM
+- Added introspection tooling for complex field type discovery
+- Note: Does not support additionalEmails/additionalPhones JSON arrays (by design)
+
+#### v0.3.8 (October 12, 2025)
+- **CRITICAL UX FIX:** Implemented conditional field display using path-based displayOptions
+- Only relevant input fields now appear based on Field Type selection
+- Fixed annoying bug where 12+ fields showed up for every field
+- Uses `/fields.field[0].fieldType` path reference for proper conditional display
+- Much cleaner, more professional user experience
+
+#### v0.3.7 (October 12, 2025)
+- **MAJOR UX IMPROVEMENT:** Added explicit "Field Type" selector
+- Users now choose field type: Simple / Full Name / Link / Currency / Address
+- Updated transformation logic to use fieldType parameter
+- Note: All fields still visible (fixed in v0.3.8)
+
+#### v0.3.6 (October 12, 2025)
+- **CRITICAL FIX:** Removed displayOptions from fixedCollection child parameters
+- Resolves "Could not resolve parameter dependencies. Max iterations reached!" error
+- Field addition now works correctly in Create One and Update One operations
+- Simplified field parameter structure for better n8n compatibility
+- Note: All complex field inputs visible (superseded by v0.3.7's field type selector)
+
+#### v0.3.5 (October 12, 2025)
+- Integrated comprehensive README from template
+- Enhanced bug reporting section
+- Added complete list of 40+ standard Twenty objects
+- Improved credits and installation sections
 
 #### v0.3.4 (October 12, 2025)
 - Comprehensive README documentation update

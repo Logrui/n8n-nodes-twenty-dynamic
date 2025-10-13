@@ -18,7 +18,6 @@ import {
     buildListQuery,
     twentyApiRequest,
 } from './TwentyApi.client';
-import { getAllComplexFieldParameters, getComplexFieldNames } from './FieldParameters';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
 
 export class Twenty implements INodeType {
@@ -153,39 +152,305 @@ export class Twenty implements INodeType {
                                 default: '',
                                 description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                             },
-                            // Simple field value (hidden for complex fields except name)
                             {
-                                displayName: 'Field Value',
+                                displayName: 'Field Type',
+                                name: 'fieldType',
+                                type: 'options',
+                                options: [
+                                    {
+                                        name: 'Address (Street, City, State, Etc.)',
+                                        value: 'address',
+                                    },
+                                    {
+                                        name: 'Currency (Amount + Currency Code)',
+                                        value: 'currency',
+                                    },
+                                    {
+                                        name: 'Emails (Primary Email Address)',
+                                        value: 'emails',
+                                    },
+                                    {
+                                        name: 'Full Name (First/Last Name)',
+                                        value: 'fullName',
+                                    },
+                                    {
+                                        name: 'Link (URL With Label)',
+                                        value: 'link',
+                                    },
+                                    {
+                                        name: 'Phones (Primary Phone Details)',
+                                        value: 'phones',
+                                    },
+                                    {
+                                        name: 'Simple Value (Text, Number, Date, Etc.)',
+                                        value: 'simple',
+                                    },
+                                ],
+                                default: 'simple',
+                                description: 'The type of data you are entering. Use Simple for most fields (text, numbers, booleans, dates). Use specific types for complex objects like emails, phones, addresses, etc.',
+                            },
+                            // Simple field value
+                            {
+                                displayName: 'Value',
                                 name: 'fieldValue',
                                 type: 'string',
                                 displayOptions: {
-                                    hide: {
-                                        fieldName: getComplexFieldNames(),
+                                    show: {
+                                        '/fields.field[0].fieldType': ['simple'],
                                     },
                                 },
                                 default: '',
                                 description: 'The value to set for this field',
                                 placeholder: 'Enter value',
                             },
-                            // Company/Other resources: name field is simple text
+                            // Full Name fields  
                             {
-                                displayName: 'Field Value',
-                                name: 'fieldValue',
+                                displayName: 'First Name',
+                                name: 'firstName',
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        fieldName: ['name'],
-                                    },
-                                    hide: {
-                                        resource: ['person'],
+                                        '/fields.field[0].fieldType': ['fullName'],
                                     },
                                 },
                                 default: '',
-                                description: 'The company/object name',
-                                placeholder: 'Acme Corporation',
+                                description: 'First name / given name',
+                                placeholder: 'John',
                             },
-                            // Complex field parameters (imported from FieldParameters module)
-                            ...getAllComplexFieldParameters(),
+                            {
+                                displayName: 'Last Name',
+                                name: 'lastName',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['fullName'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Last name / family name',
+                                placeholder: 'Doe',
+                            },
+                            // Link fields
+                            {
+                                displayName: 'URL',
+                                name: 'primaryLinkUrl',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['link'],
+                                    },
+                                },
+                                default: '',
+                                description: 'The complete URL',
+                                placeholder: 'https://example.com',
+                            },
+                            {
+                                displayName: 'Label',
+                                name: 'primaryLinkLabel',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['link'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Display label for the URL',
+                                placeholder: 'example.com',
+                            },
+                            // Currency fields
+                            {
+                                displayName: 'Amount',
+                                name: 'currencyAmount',
+                                type: 'number',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['currency'],
+                                    },
+                                },
+                                default: 0,
+                                description: 'Amount in your currency (will be converted to micros automatically)',
+                                placeholder: '100000',
+                            },
+                            {
+                                displayName: 'Currency Code',
+                                name: 'currencyCode',
+                                type: 'options',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['currency'],
+                                    },
+                                },
+                                options: [
+                                    { name: 'Australian Dollar (AUD)', value: 'AUD' },
+                                    { name: 'British Pound (GBP)', value: 'GBP' },
+                                    { name: 'Canadian Dollar (CAD)', value: 'CAD' },
+                                    { name: 'Chinese Yuan (CNY)', value: 'CNY' },
+                                    { name: 'Euro (EUR)', value: 'EUR' },
+                                    { name: 'Japanese Yen (JPY)', value: 'JPY' },
+                                    { name: 'Swiss Franc (CHF)', value: 'CHF' },
+                                    { name: 'US Dollar (USD)', value: 'USD' },
+                                ],
+                                default: 'USD',
+                                description: 'Three-letter currency code',
+                            },
+                            // Address fields
+                            {
+                                displayName: 'Street Address 1',
+                                name: 'addressStreet1',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Primary street address',
+                                placeholder: '123 Main Street',
+                            },
+                            {
+                                displayName: 'Street Address 2',
+                                name: 'addressStreet2',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Apartment, suite, unit, etc. (optional).',
+                                placeholder: 'Suite 100',
+                            },
+                            {
+                                displayName: 'City',
+                                name: 'addressCity',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'City or locality',
+                                placeholder: 'New York',
+                            },
+                            {
+                                displayName: 'Postal Code',
+                                name: 'addressPostcode',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'ZIP or postal code',
+                                placeholder: '10001',
+                            },
+                            {
+                                displayName: 'State / Province',
+                                name: 'addressState',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'State, province, or region',
+                                placeholder: 'NY',
+                            },
+                            {
+                                displayName: 'Country',
+                                name: 'addressCountry',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Country name',
+                                placeholder: 'United States',
+                            },
+                            {
+                                displayName: 'Latitude',
+                                name: 'addressLat',
+                                type: 'number',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: undefined,
+                                description: 'Geographic latitude (optional)',
+                                placeholder: '40.7128',
+                            },
+                            {
+                                displayName: 'Longitude',
+                                name: 'addressLng',
+                                type: 'number',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['address'],
+                                    },
+                                },
+                                default: undefined,
+                                description: 'Geographic longitude (optional)',
+                                placeholder: '-74.0060',
+                            },
+                            // Emails fields
+                            {
+                                displayName: 'Primary Email',
+                                name: 'primaryEmail',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['emails'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Primary email address',
+                                placeholder: 'john@example.com',
+                            },
+                            // Phones fields
+                            {
+                                displayName: 'Primary Phone Number',
+                                name: 'primaryPhoneNumber',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['phones'],
+                                    },
+                                },
+                                default: '',
+                                placeholder: '+1-555-0123',
+                            },
+                            {
+                                displayName: 'Country Code',
+                                name: 'primaryPhoneCountryCode',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['phones'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Two-letter country code (ISO 3166-1 alpha-2)',
+                                placeholder: 'US',
+                            },
+                            {
+                                displayName: 'Calling Code',
+                                name: 'primaryPhoneCallingCode',
+                                type: 'string',
+                                displayOptions: {
+                                    show: {
+                                        '/fields.field[0].fieldType': ['phones'],
+                                    },
+                                },
+                                default: '',
+                                description: 'International calling code with plus sign',
+                                placeholder: '+1',
+                            },
                         ],
                     },
                 ],
@@ -285,12 +550,52 @@ export class Twenty implements INodeType {
                         ? fields.filter((field) => field.isWritable) // Only writable fields for Create/Update
                         : fields; // All fields for Get/List/Delete
 
-                    // Transform to dropdown options
-                    const options: INodePropertyOptions[] = filteredFields.map((field) => ({
-                        name: `${field.name} (${field.label})`,
-                        value: field.name,
-                        description: `Type: ${field.type}${field.isNullable ? ' (optional)' : ' (required)'}`,
-                    }));
+                    // Transform to dropdown options with Twenty field type and suggested n8n Field Type
+                    const options: INodePropertyOptions[] = filteredFields.map((field) => {
+                        // Map Twenty field types to suggested n8n Field Types
+                        let suggestedFieldType = '';
+                        switch (field.type) {
+                            case 'FullName':
+                                suggestedFieldType = ' → Use "Full Name"';
+                                break;
+                            case 'Links':
+                                suggestedFieldType = ' → Use "Link"';
+                                break;
+                            case 'Currency':
+                                suggestedFieldType = ' → Use "Currency"';
+                                break;
+                            case 'Address':
+                                suggestedFieldType = ' → Use "Address"';
+                                break;
+                            case 'EMAILS':
+                                suggestedFieldType = ' → Use "Emails"';
+                                break;
+                            case 'PHONES':
+                                suggestedFieldType = ' → Use "Phones"';
+                                break;
+                            case 'TEXT':
+                            case 'NUMBER':
+                            case 'DATE_TIME':
+                            case 'DATE':
+                            case 'BOOLEAN':
+                            case 'UUID':
+                            case 'RAW_JSON':
+                                suggestedFieldType = ' → Use "Simple"';
+                                break;
+                            // SELECT, MULTI_SELECT, RELATION types don't have implementations yet
+                            case 'SELECT':
+                            case 'MULTI_SELECT':
+                            case 'RELATION':
+                                suggestedFieldType = ' → Not yet supported';
+                                break;
+                        }
+
+                        return {
+                            name: `${field.name} (${field.label})`,
+                            value: field.name,
+                            description: `Twenty Type: ${field.type}${suggestedFieldType}${field.isNullable ? ' (optional)' : ' (required)'}`,
+                        };
+                    });
 
                     // Sort: 'name' first, then system/standard fields, then alphabetically
                     options.sort((a, b) => {
