@@ -17,6 +17,9 @@ import {
     buildDeleteMutation,
     buildListQuery,
     twentyApiRequest,
+    queryGraphQLType,
+    queryEnumValues,
+    IFieldMetadata,
 } from './TwentyApi.client';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
 
@@ -155,51 +158,9 @@ export class Twenty implements INodeType {
                             {
                                 displayName: 'Field Type',
                                 name: 'fieldType',
-                                type: 'options',
-                                options: [
-                                    {
-                                        name: 'Address (Street, City, State, Etc.)',
-                                        value: 'address',
-                                    },
-                                    {
-                                        name: 'Boolean (True/False)',
-                                        value: 'boolean',
-                                    },
-                                    {
-                                        name: 'Currency (Amount + Currency Code)',
-                                        value: 'currency',
-                                    },
-                                    {
-                                        name: 'Emails (Primary Email Address)',
-                                        value: 'emails',
-                                    },
-                                    {
-                                        name: 'Full Name (First/Last Name)',
-                                        value: 'fullName',
-                                    },
-                                    {
-                                        name: 'Link (URL With Label)',
-                                        value: 'link',
-                                    },
-                                    {
-                                        name: 'Multi-Select (Multiple Choices)',
-                                        value: 'multiSelect',
-                                    },
-                                    {
-                                        name: 'Phones (Primary Phone Details)',
-                                        value: 'phones',
-                                    },
-                                    {
-                                        name: 'Select (Single Choice)',
-                                        value: 'select',
-                                    },
-                                    {
-                                        name: 'Simple Value (Text, Number, Date, Etc.)',
-                                        value: 'simple',
-                                    },
-                                ],
-                                default: 'simple',
-                                description: 'The type of field. Check the Field Name description for the recommended type based on Twenty\'s schema.',
+                                type: 'hidden',  // ✅ Hidden from user - auto-detected!
+                                default: '={{$parameter["&fieldName"].split("|")[1]}}',  // ⭐ Extract type from pipe-separated value
+                                description: 'Auto-detected field type from Twenty CRM schema. Extracted from fieldName value.',
                             },
                             // Boolean field
                             {
@@ -590,9 +551,9 @@ export class Twenty implements INodeType {
             },
 
             /**
-             * Get writable fields for the selected resource.
-             * Uses GraphQL introspection on the /graphql data schema to get ALL fields.
-             * This replaces the previous /metadata approach which only returned custom fields.
+             * Get writable fields for the selected resource using DUAL-SOURCE architecture.
+             * Combines metadata API (custom fields with detailed options) + GraphQL introspection (built-in enum fields).
+             * Returns pipe-separated values (fieldName|fieldType) for auto-detection.
              */
             async getFieldsForResource(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
@@ -602,6 +563,9 @@ export class Twenty implements INodeType {
                         return [];
                     }
 
+                    // Get force refresh flag
+                    const forceRefresh = this.getCurrentNodeParameter('forceRefresh') as boolean || false;
+
                     // Get operation to determine which fields to show
                     let operation = '';
                     try {
@@ -610,62 +574,90 @@ export class Twenty implements INodeType {
                         // Operation not selected yet, default to showing all fields
                     }
 
-                    // Use data schema introspection to get ALL fields (standard + custom)
-                    const fields = await getDataSchemaForObject.call(this, resource);
+                    // SOURCE 1: Metadata API (custom SELECT fields with rich options)
+                    const schema = await getCachedSchema.call(this, forceRefresh);
+                    const objectMeta = schema.objects.find((obj) => obj.nameSingular === resource);
+                    const metadataFields: IFieldMetadata[] = objectMeta?.fields || [];
+
+                    // SOURCE 2: GraphQL Introspection (ALL fields including built-in enums)
+                    const graphqlFields: IFieldMetadata[] = await getDataSchemaForObject.call(this, resource);
+
+                    // MERGE: Combine both sources, deduplicating (metadata takes priority for richer data)
+                    const fieldMap = new Map<string, IFieldMetadata>();
+
+                    // Add GraphQL fields first (base coverage)
+                    graphqlFields.forEach((field) => {
+                        fieldMap.set(field.name, {
+                            ...field,
+                            source: 'graphql',
+                        });
+                    });
+
+                    // Override with metadata fields (richer data, especially for custom SELECT fields)
+                    metadataFields.forEach((field) => {
+                        fieldMap.set(field.name, {
+                            ...field,
+                            source: 'metadata',
+                        });
+                    });
+
+                    // Convert map to array
+                    const allFields = Array.from(fieldMap.values());
 
                     // Filter fields based on operation
                     const isCreateOrUpdate = operation === 'createOne' || operation === 'updateOne';
                     const filteredFields = isCreateOrUpdate
-                        ? fields.filter((field) => field.isWritable) // Only writable fields for Create/Update
-                        : fields; // All fields for Get/List/Delete
+                        ? allFields.filter((field) => field.isWritable) // Only writable fields for Create/Update
+                        : allFields; // All fields for Get/List/Delete
 
-                    // Transform to dropdown options with Twenty field type and suggested n8n Field Type
-                    const options: INodePropertyOptions[] = filteredFields.map((field) => {
-                        // Map Twenty field types to suggested n8n Field Types
-                        let suggestedFieldType = '';
-                        switch (field.type) {
-                            case 'FullName':
-                                suggestedFieldType = ' ? Use "Full Name"';
-                                break;
-                            case 'Links':
-                                suggestedFieldType = ' ? Use "Link"';
-                                break;
-                            case 'Currency':
-                                suggestedFieldType = ' ? Use "Currency"';
-                                break;
-                            case 'Address':
-                                suggestedFieldType = ' ? Use "Address"';
-                                break;
-                            case 'EMAILS':
-                                suggestedFieldType = ' ? Use "Emails"';
-                                break;
-                            case 'PHONES':
-                                suggestedFieldType = ' ? Use "Phones"';
-                                break;
-                            case 'TEXT':
-                            case 'NUMBER':
-                            case 'DATE_TIME':
-                            case 'DATE':
-                            case 'BOOLEAN':
-                            case 'UUID':
-                            case 'RAW_JSON':
-                                suggestedFieldType = ' ? Use "Simple"';
-                                break;
-                            case 'SELECT':
-                                suggestedFieldType = ' ? Use "Select"';
-                                break;
-                            case 'MULTI_SELECT':
-                                suggestedFieldType = ' ? Use "Multi-Select"';
-                                break;
-                            case 'RELATION':
-                                suggestedFieldType = ' ? Not yet supported';
-                                break;
+                    // Helper: Map Twenty field type to n8n field type
+                    const mapTwentyTypeToN8nType = (twentyType: string): string => {
+                        const typeMap: Record<string, string> = {
+                            'SELECT': 'select',
+                            'MULTI_SELECT': 'multiSelect',
+                            'FullName': 'fullName',
+                            'Links': 'link',
+                            'Currency': 'currency',
+                            'Address': 'address',
+                            'EMAILS': 'emails',
+                            'PHONES': 'phones',
+                            'BOOLEAN': 'boolean',
+                            'TEXT': 'simple',
+                            'NUMBER': 'simple',
+                            'DATE_TIME': 'simple',
+                            'DATE': 'simple',
+                            'UUID': 'simple',
+                            'RAW_JSON': 'simple',
+                            'RELATION': 'relation',
+                        };
+                        return typeMap[twentyType] || 'simple';
+                    };
+
+                    // Helper: Map GraphQL type to n8n field type (for built-in enums)
+                    const mapGraphQLTypeToN8nType = (graphqlType: string): string => {
+                        // Check for LIST types (MULTI_SELECT)
+                        if (graphqlType.startsWith('LIST<') && graphqlType.includes('Enum')) {
+                            return 'multiSelect';
                         }
+                        // Check for single enum types (SELECT)
+                        if (graphqlType.includes('Enum')) {
+                            return 'select';
+                        }
+                        // Default mapping
+                        return mapTwentyTypeToN8nType(graphqlType);
+                    };
+
+                    // Transform to dropdown options with pipe-separated values (fieldName|fieldType)
+                    const options: INodePropertyOptions[] = filteredFields.map((field) => {
+                        // Determine n8n field type
+                        const n8nType = field.source === 'metadata' 
+                            ? mapTwentyTypeToN8nType(field.type)
+                            : mapGraphQLTypeToN8nType(field.type);
 
                         return {
-                            name: `${field.name} (${field.label})`,
-                            value: field.name,
-                            description: `Twenty Type: ${field.type}${suggestedFieldType}${field.isNullable ? ' (optional)' : ' (required)'}`,
+                            name: field.label || field.name,
+                            value: `${field.name}|${n8nType}`,  // ✅ Pipe-separated for auto-detection
+                            description: field.type,
                         };
                     });
 
@@ -675,8 +667,8 @@ export class Twenty implements INodeType {
                         const bValue = String(b.value);
                         
                         // 'name' always comes first
-                        if (aValue === 'name') return -1;
-                        if (bValue === 'name') return 1;
+                        if (aValue.startsWith('name|')) return -1;
+                        if (bValue.startsWith('name|')) return 1;
                         
                         const aIsStandard = ['id', 'createdAt', 'updatedAt', 'deletedAt'].some(
                             (f) => aValue.includes(f)
@@ -698,165 +690,111 @@ export class Twenty implements INodeType {
             },
 
             /**
-             * Load options for SELECT and MULTI_SELECT fields
-             * Returns the available options from Twenty's metadata
+             * Load options for SELECT and MULTI_SELECT fields using DUAL-SOURCE strategy.
+             * Strategy 1: Try metadata API first (custom fields with colors).
+             * Strategy 2: Fall back to GraphQL introspection (built-in enum fields).
              */
             async getOptionsForSelectField(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
                     // Get the selected resource and field name
                     const resource = this.getCurrentNodeParameter('resource') as string;
                     if (!resource) {
-                        return [];
+                        throw new NodeOperationError(this.getNode(), 'No resource selected');
                     }
 
-                    // Get the field name - in loadOptions context for fixedCollection items,
-                    // we can access sibling parameters using getCurrentNodeParameter
-                    const fieldName = this.getCurrentNodeParameter('fieldName') as string;
+                    // Get the field name from the fixedCollection context
+                    // In fixedCollection, we need to access the current parameter being loaded
+                    // Use '&fieldName' to reference the parameter within the same collection
+                    let fieldNameWithType: string;
+                    try {
+                        // Try to get from current field context using & prefix
+                        fieldNameWithType = this.getCurrentNodeParameter('&fieldName') as string;
+                    } catch {
+                        // If that fails, the field hasn't been selected yet
+                        return [];
+                    }
                     
-                    if (!fieldName) {
+                    if (!fieldNameWithType) {
                         return [];
                     }
 
-                    // Get full schema to find field options
-                    const allFields = await getDataSchemaForObject.call(this, resource);
-                    const selectedField = allFields.find(f => f.name === fieldName);
-
-                    if (!selectedField || !selectedField.options || selectedField.options.length === 0) {
-                        return [];
+                    // Extract field name and type from pipe-separated value
+                    const parts = fieldNameWithType.split('|');
+                    if (parts.length !== 2) {
+                        throw new NodeOperationError(this.getNode(), `Invalid field format: ${fieldNameWithType}`);
                     }
-
-                    // Transform Twenty options to n8n dropdown options
-                    // Sort by position to maintain order
-                    const sortedOptions = [...selectedField.options].sort((a, b) => a.position - b.position);
                     
-                    return sortedOptions.map(opt => ({
-                        name: opt.label,
-                        value: opt.value,
-                        description: `Color: ${opt.color}`,
-                    }));
+                    const [fieldName, fieldType] = parts;
+
+                    // Validate it's a SELECT/MULTI_SELECT type
+                    if (!['select', 'multiSelect'].includes(fieldType)) {
+                        return [];
+                    }
+
+                    // STRATEGY 1: Try Metadata API first (custom SELECT fields with colors)
+                    const forceRefresh = this.getCurrentNodeParameter('forceRefresh') as boolean || false;
+                    const schema = await getCachedSchema.call(this, forceRefresh);
+                    const objectMeta = schema.objects.find((obj) => obj.nameSingular === resource);
+                    
+                    if (objectMeta?.fields) {
+                        const metadataField = objectMeta.fields.find((f: IFieldMetadata) => f.name === fieldName);
+                        
+                        if (metadataField?.options && metadataField.options.length > 0) {
+                            // Found in metadata - return rich options with colors
+                            const sortedOptions = [...metadataField.options].sort((a, b) => a.position - b.position);
+                            return sortedOptions.map(opt => ({
+                                name: opt.label,
+                                value: opt.value,
+                                description: opt.color ? `Color: ${opt.color}` : undefined,
+                            }));
+                        }
+                    }
+
+                    // STRATEGY 2: Fall back to GraphQL introspection (built-in enum fields)
+                    const typeName = resource.charAt(0).toUpperCase() + resource.slice(1);
+                    const graphqlSchema = await queryGraphQLType.call(this, typeName);
+                    
+                    if (graphqlSchema.__type?.fields) {
+                        const graphqlField = graphqlSchema.__type.fields.find((f: any) => f.name === fieldName);
+                        
+                        if (graphqlField) {
+                            // Check if it's an enum type
+                            let enumTypeName = null;
+                            
+                            if (graphqlField.type.kind === 'ENUM') {
+                                // Single SELECT enum
+                                enumTypeName = graphqlField.type.name;
+                            } else if (graphqlField.type.kind === 'LIST' && graphqlField.type.ofType?.kind === 'ENUM') {
+                                // MULTI_SELECT enum (LIST of ENUM)
+                                enumTypeName = graphqlField.type.ofType.name;
+                            }
+                            
+                            if (enumTypeName) {
+                                // Query enum values
+                                const enumValues = await queryEnumValues.call(this, enumTypeName);
+                                return enumValues.map(ev => ({
+                                    name: ev.label,
+                                    value: ev.name,
+                                }));
+                            }
+                        }
+                    }
+
+                    // No options found from either source
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `No options found for field "${fieldName}" (type: ${fieldType}). This field may not be a SELECT or MULTI_SELECT type, or the field data is not available.`,
+                    );
                 } catch (error) {
-                    // Return empty array on error to prevent UI breaks
-                    return [];
-                }
-            },
-
-            /**
-             * Auto-detect field type based on selected field
-             * Returns suggested field type options based on Twenty's metadata
-             */
-            async getFieldTypeOptions(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-                // Default options
-                const defaultOptions: INodePropertyOptions[] = [
-                    {
-                        name: 'Address (Street, City, State, Etc.)',
-                        value: 'address',
-                    },
-                    {
-                        name: 'Currency (Amount + Currency Code)',
-                        value: 'currency',
-                    },
-                    {
-                        name: 'Emails (Primary Email Address)',
-                        value: 'emails',
-                    },
-                    {
-                        name: 'Full Name (First/Last Name)',
-                        value: 'fullName',
-                    },
-                    {
-                        name: 'Link (URL With Label)',
-                        value: 'link',
-                    },
-                    {
-                        name: 'Multi-Select (Multiple Choices)',
-                        value: 'multiSelect',
-                    },
-                    {
-                        name: 'Phones (Primary Phone Details)',
-                        value: 'phones',
-                    },
-                    {
-                        name: 'Select (Single Choice)',
-                        value: 'select',
-                    },
-                    {
-                        name: 'Simple Value (Text, Number, Date, Etc.)',
-                        value: 'simple',
-                    },
-                ];
-
-                try {
-                    // Get the selected resource and field name
-                    const resource = this.getCurrentNodeParameter('resource') as string;
-                    if (!resource) {
-                        return defaultOptions;
+                    // If it's already a NodeOperationError, rethrow it
+                    if (error instanceof NodeOperationError) {
+                        throw error;
                     }
-
-                    // Try to get the field name
-                    const fieldName = this.getCurrentNodeParameter('fieldName') as string;
-
-                    if (!fieldName) {
-                        return defaultOptions;
-                    }
-
-                    // Get full schema to find field type
-                    const allFields = await getDataSchemaForObject.call(this, resource);
-                    const selectedField = allFields.find((f: any) => f.name === fieldName);
-
-                    if (!selectedField) {
-                        return defaultOptions;
-                    }
-
-                    // Map Twenty field type to n8n field type and put it first in the list
-                    let suggestedValue: string = 'simple';
-
-                    switch (selectedField.type) {
-                        case 'FullName':
-                            suggestedValue = 'fullName';
-                            break;
-                        case 'Links':
-                            suggestedValue = 'link';
-                            break;
-                        case 'Currency':
-                            suggestedValue = 'currency';
-                            break;
-                        case 'Address':
-                            suggestedValue = 'address';
-                            break;
-                        case 'EMAILS':
-                            suggestedValue = 'emails';
-                            break;
-                        case 'PHONES':
-                            suggestedValue = 'phones';
-                            break;
-                        case 'SELECT':
-                            suggestedValue = 'select';
-                            break;
-                        case 'MULTI_SELECT':
-                            suggestedValue = 'multiSelect';
-                            break;
-                        default:
-                            suggestedValue = 'simple';
-                    }
-
-                    // Reorder options to put the suggested one first with a special marker
-                    const suggestedOption = defaultOptions.find((opt: INodePropertyOptions) => opt.value === suggestedValue);
-                    const otherOptions = defaultOptions.filter((opt: INodePropertyOptions) => opt.value !== suggestedValue);
-
-                    if (suggestedOption) {
-                        return [
-                            {
-                                ...suggestedOption,
-                                name: `${suggestedOption.name} ? (Recommended)`,
-                                description: `Automatically detected from Twenty schema. Type: ${selectedField.type}`,
-                            },
-                            ...otherOptions,
-                        ];
-                    }
-
-                    return defaultOptions;
-                } catch (error) {
-                    return defaultOptions;
+                    // Otherwise, wrap in NodeOperationError with helpful message
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `Error fetching options: ${error.message}`,
+                    );
                 }
             },
         },

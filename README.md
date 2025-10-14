@@ -1,43 +1,46 @@
 # n8n-nodes-twenty-dynamic
 
-This is an n8n community node for **Twenty CRM** that uses dynamic schema discovery and enables working with Standard AND Custom data objects and fields.
+![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
 
-🎯 **BETA VERSION - Approaching Production Ready** 🎯
+This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)** with fully **dynamic resource and field discovery**. It automatically adapts to your Twenty instance schema, including custom objects and fields, without requiring node updates.
 
-**Current Status (v0.4.2):**
-- ✅ Dynamic schema discovery from Twenty CRM (metadata + GraphQL introspection)
-- ✅ All CRUD operations fully implemented and tested
-- ✅ Complex field types supported (FullName, Links, Currency, Address, Emails, Phones, SELECT, MULTI_SELECT)
-- ✅ **Auto-detection of field types** - Correct Field Type automatically selected based on field
-- ✅ **Dynamic SELECT options** - Dropdown choices loaded directly from your Twenty CRM
-- ✅ **Smart field selection** - Field Type suggestions based on Twenty's metadata
-- ✅ **Conditional field display** - only relevant fields appear based on Field Type selection
-- ✅ Clean, intuitive UI with no field clutter
-- ✅ Modular architecture for easy maintenance
-- ✅ Support for Standard AND Custom objects/fields
-- 🧪 **Beta testing** - Core functionality stable, additional features in development
-- ⚠️ **Production use with caution** - Test thoroughly in your environment first
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-**Recent Improvements (v0.4.x):**
-- **CRITICAL FIX:** Field Type auto-detection now works - recommended type appears first with ⭐ (v0.4.1)
-- **CRITICAL FIX:** SELECT/MULTI_SELECT dropdown options now load correctly (v0.4.1)
-- Field Type dropdown is now dynamic and shows the recommended type based on your selection
-- SELECT and MULTI_SELECT field types with real-time dropdown options (v0.4.0)
-- Conditional display using path-based displayOptions - only relevant fields show (v0.3.8)
-- Fixed annoying UX bug where 12+ fields appeared for every field selection (v0.3.8)
-- Explicit field type selector - users choose Simple/FullName/Link/Currency/Address/Emails/Phones (v0.3.7-v0.3.9)
-- Fixed critical n8n circular dependency bug preventing field additions (v0.3.6)
-- Complex field types with template-based inputs (no more JSON editing!)
-- Modular codebase with separate field parameter and transformation modules
-- GraphQL introspection for accurate field type detection
+[Twenty CRM](https://twenty.com) is a modern, open-source CRM system built with GraphQL.
 
-**Known Limitations:**
-- Advanced filtering UI still basic (can use expressions for complex filters)
-- Emails/Phones field types only support primary fields (not additionalEmails/additionalPhones arrays)
-- RELATION field type not yet supported (foreign key relationships)
-- Relational fields work but UI could be improved
+[Installation](#installation)  
+[Operations](#operations)  
+[Credentials](#credentials)  
+[Compatibility](#compatibility)  
+[Resources](#resources)  
 
-**Feedback Welcome:** This node is approaching production readiness. Please report issues on [GitHub](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues).
+## Features
+
+✨ **Dual-Source Architecture**: Combines Metadata API and GraphQL introspection for complete field coverage  
+✨ **Automatic Field Detection**: Field types auto-detected and configured (no manual type selection)  
+✨ **Built-in Enum Support**: Now supports all Twenty built-in enums (Person.gender, Opportunity.stage, etc.)  
+✨ **Dynamic Resource Discovery**: Automatically fetches standard and custom objects from your Twenty instance  
+✨ **Auto-Adapting Fields**: Discovers all available fields dynamically (no hardcoded field lists)  
+✨ **Custom Object Support**: Works seamlessly with your custom objects and fields  
+✨ **CRUD Operations**: Full Create, Read, Update, and Delete support  
+✨ **Complex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
+✨ **SELECT/MULTI_SELECT Fields**: Dynamic dropdowns with real-time option loading  
+✨ **Smart Caching**: 10-minute TTL with force refresh option  
+✨ **Zero Dependencies**: Built with n8n native HTTP helpers only  
+
+## Current Status
+
+**v0.5.0** - Production-ready with dual-source architecture for complete field coverage.
+
+### What's New in v0.5.0
+
+- **Dual-Source Field Discovery**: Queries both Metadata API and GraphQL introspection for 100% field coverage
+- **Built-in Enum Support**: Now discovers and supports all Twenty built-in enum fields (previously invisible)
+- **Automatic Type Detection**: Field types auto-detected and hidden from users (improved UX)
+- **Smart Fallback**: Tries Metadata API first (custom SELECTs), falls back to GraphQL (built-in enums)
+- **Complete Coverage**: All Twenty CRM fields now supported, including Person.gender, Opportunity.stage, etc.
+
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ## About This Project
 
@@ -180,36 +183,22 @@ Copy the API key. Click 'Add Credential' in n8n and search for 'Twenty API'. Pro
 
 ## Development Status
 
-**Phase 1: Build Functional Prototype** ✅ Complete
-- Core GraphQL integration
-- Dynamic resource discovery
-- All CRUD operations (Create, Read, Update, Delete, List)
-- Runtime query construction
+**Production-Ready Features:**
+- ✅ Dual-source architecture (Metadata API + GraphQL introspection)
+- ✅ Complete field coverage (custom SELECTs + built-in enums)
+- ✅ All CRUD operations (Create, Read, Update, Delete, List)
+- ✅ Complex field types (FullName, Links, Currency, Address, Emails, Phones)
+- ✅ SELECT/MULTI_SELECT with dynamic options
+- ✅ Automatic field type detection
+- ✅ Template-based inputs (no JSON required)
+- ✅ Smart caching with 10-minute TTL
+- ✅ Zero external dependencies
 
-**Phase 2: Production-Ready Enhancements** ✅ Complete
-- ✅ Refactored to use n8n native HTTP helpers (no external dependencies)
-- ✅ Enhanced field returns (automatically queries all available fields)
-- ✅ Implemented intelligent caching with 10-minute TTL
-- ✅ Added "Force Refresh Schema" option
-- ✅ Complex field type support (FullName, Links, Currency, Address)
-- ✅ Template-based field inputs (no JSON required)
-- ✅ Resource-aware field rendering
-- ✅ Modular architecture for maintainability
-
-**Phase 3: Polish and Testing** 🚧 In Progress
-- ✅ Field type introspection and validation
-- ✅ Resource-specific field behavior (Company vs Person)
-- ✅ Modular codebase (FieldParameters, FieldTransformation modules)
+**Future Enhancements:**
 - ⏳ Advanced filter UI improvements
-- ⏳ Support for all Twenty complex field types (Emails, Phones, Rating, etc.)
+- ⏳ Support for remaining Twenty complex field types (Rating, etc.)
 - ⏳ Schema versioning and change detection
 - ⏳ Support for Twenty "Views"
-- ⏳ Comprehensive testing across all field types
-
-**Current Status:**
-- Core CRUD operations are stable and production-ready
-- Complex field types work well for common scenarios
-- Beta testing in progress for edge cases and additional field types
 
 See [PLAN_V2.md](PLAN_V2.md) for detailed development roadmap.
 
@@ -241,11 +230,11 @@ User Selects Resource → Load Fields Dynamically → User Fills Values
 
 ## Compatibility
 
-This node is being developed and tested against:
+**Tested and verified with:**
 - **Twenty CRM**: v0.40+ (tested with v1.0.3)
 - **n8n**: v1.91+ (tested with v1.91.3)
 
-Currently in beta testing phase. Compatible with both self-hosted and cloud instances of Twenty CRM.
+Compatible with both self-hosted and cloud instances of Twenty CRM.
 
 ## Resources
 
@@ -253,191 +242,9 @@ Currently in beta testing phase. Compatible with both self-hosted and cloud inst
 * [Twenty developer documentation](https://twenty.com/developers/)
 * [Twenty GraphQL API documentation](https://twenty.com/developers/section/graphql)
 * [Project Development Plan](PLAN_V2.md)
+* [Changelog](CHANGELOG.md)
 * [GitHub Repository](https://github.com/Logrui/n8n-nodes-twenty-dynamic)
 * [npm Package](https://www.npmjs.com/package/n8n-nodes-twenty-dynamic)
-
-## Version History
-
-**Current Development Series (v0.4.x - SELECT/MULTI_SELECT Fields):**
-
-#### v0.4.2 (October 14, 2025)
-- **CRITICAL FIX:** loadOptionsMethod parameter access corrected for fixedCollection context
-- Use `getCurrentNodeParameter('fieldName')` instead of complex path resolution
-- Added `loadOptionsDependsOn: ['fieldName']` for proper dependency tracking
-- SELECT and MULTI_SELECT dropdowns now populate correctly with options
-- Field Type auto-detection now triggers properly when field changes
-
-#### v0.4.1 (October 14, 2025)
-- **CRITICAL FIX:** Field Type auto-detection now works correctly
-- Field Type dropdown shows recommended type with ⭐ star marker
-- Recommended type appears first in dropdown based on Twenty field type
-- **CRITICAL FIX:** SELECT and MULTI_SELECT options now load properly
-- Fixed loadOptionsMethod parameter path resolution
-- SELECT dropdowns now populate with actual options from Twenty CRM
-- Field Type description updated to clarify auto-detection behavior
-
-#### v0.4.0 (October 14, 2025)
-- **MAJOR FEATURE:** SELECT and MULTI_SELECT field types with dynamic options
-- Dropdown options populated in real-time from your Twenty CRM instance
-- Options loaded via metadata API with id, label, value, color, and position
-- SELECT fields use single-select dropdown (type: 'options')
-- MULTI_SELECT fields use multi-select dropdown (type: 'multiOptions')
-- Works with both standard and custom SELECT/MULTI_SELECT fields
-- Field type suggestions updated to recommend "Select" and "Multi-Select"
-- Example fields: job.status, opportunity.stage, workflow.statuses, person.category
-
-**Previous Development Series (v0.3.x - Complex Fields & Resource-Aware Implementation):**
-
-#### v0.3.10 (October 12, 2025)
-- **UX IMPROVEMENT:** Field selection dropdown now shows Twenty field type + suggested n8n Field Type
-- Examples: "name (Name) - Twenty Type: FullName → Use 'Full Name' (required)"
-- Helps users choose the correct Field Type without guessing
-- Indicates unsupported types (RELATION)
-
-#### v0.3.9 (October 12, 2025)
-- **NEW FEATURE:** Added Emails field type with Primary Email support
-- **NEW FEATURE:** Added Phones field type with Primary Phone Number, Country Code, and Calling Code
-- Supports person.emails and future emails/phones fields in Twenty CRM
-- Added introspection tooling for complex field type discovery
-- Note: Does not support additionalEmails/additionalPhones JSON arrays (by design)
-
-#### v0.3.8 (October 12, 2025)
-- **CRITICAL UX FIX:** Implemented conditional field display using path-based displayOptions
-- Only relevant input fields now appear based on Field Type selection
-- Fixed annoying bug where 12+ fields showed up for every field
-- Uses `/fields.field[0].fieldType` path reference for proper conditional display
-- Much cleaner, more professional user experience
-
-#### v0.3.7 (October 12, 2025)
-- **MAJOR UX IMPROVEMENT:** Added explicit "Field Type" selector
-- Users now choose field type: Simple / Full Name / Link / Currency / Address
-- Updated transformation logic to use fieldType parameter
-- Note: All fields still visible (fixed in v0.3.8)
-
-#### v0.3.6 (October 12, 2025)
-- **CRITICAL FIX:** Removed displayOptions from fixedCollection child parameters
-- Resolves "Could not resolve parameter dependencies. Max iterations reached!" error
-- Field addition now works correctly in Create One and Update One operations
-- Simplified field parameter structure for better n8n compatibility
-- Note: All complex field inputs visible (superseded by v0.3.7's field type selector)
-
-#### v0.3.5 (October 12, 2025)
-- Integrated comprehensive README from template
-- Enhanced bug reporting section
-- Added complete list of 40+ standard Twenty objects
-- Improved credits and installation sections
-
-#### v0.3.4 (October 12, 2025)
-- Comprehensive README documentation update
-- Enhanced installation and usage instructions
-- Complete standard objects list
-- Improved bug reporting guidelines
-
-#### v0.3.3 (October 12, 2025)
-- Fixed field creation button bug caused by duplicate fieldValue parameters
-- Improved field value parameter logic with separate handling for Company.name vs other fields
-- "name" field now always appears first in dropdown for better UX
-
-#### v0.3.2 (October 12, 2025)
-- Resource-aware field parameters (Person.name vs Company.name)
-- Person.name shows First Name/Last Name inputs (FullName type)
-- Company.name shows simple text input (String type)
-- Updated field transformation to be resource-aware
-- GraphQL introspection script to detect field types by resource
-
-#### v0.3.1 (October 12, 2025)
-- Modular architecture refactoring
-- Created FieldParameters.ts module for UI parameter definitions
-- Created FieldTransformation.ts module for data transformation logic
-- Reduced Twenty.node.ts from 839 to 436 lines (48% reduction)
-- Improved code maintainability and extensibility
-
-#### v0.3.0 (October 12, 2025)
-- Template-based field inputs for complex types (no more JSON!)
-- FullName fields: Separate First Name and Last Name inputs
-- Links fields: URL and Label inputs
-- Currency fields: Amount and Currency Code with dropdown
-- Address fields: 8 separate inputs (street1, street2, city, postal, state, country, lat, lng)
-- Automatic currency micros conversion (amount * 1,000,000)
-- User-friendly field input experience
-
-**Previous Series (v0.1.x - Dynamic Schema Discovery):**
-
-#### v0.1.11 (October 11, 2025)
-- Added empty filter parameter to fields query
-- Testing if explicit filter retrieves all fields
-
-#### v0.1.10 (October 11, 2025)
-- Enhanced schema field querying
-- Improved field metadata collection
-
-#### v0.1.9 (October 11, 2025)
-- Schema cache refresh improvements
-- Field count debugging
-
-#### v0.1.8 (October 11, 2025)
-- Field filtering adjustments
-- Debug improvements
-
-#### v0.1.7 (October 11, 2025)
-- Testing phase for CRUD operations
-- Field visibility validation
-
-#### v0.1.6 (October 11, 2025)
-- Improved field filtering logic for writable fields
-- Enhanced isWritable calculation
-
-#### v0.1.5 (October 11, 2025)
-Fixed UI visibility:
-- Removed regex-based displayOptions that prevented Operation dropdown from showing
-- Operation selection now always visible after Resource selection
-
-#### v0.1.4 (October 11, 2025)
-Simplified schema query:
-- Removed relation field queries causing GraphQL errors
-- Set relationMetadata to null (basic CRUD doesn't require relation details)
-
-#### v0.1.3 (October 11, 2025)
-Fixed schema discovery query to work with updated Twenty API:
-- Changed `isWritable` field to `isUIReadOnly` (with inverted logic)
-- Changed `relationMetadata` field to `relation`
-- Fixed GraphQL schema query compatibility
-
-#### v0.1.2 (October 11, 2025)
-Fixed GraphQL request body formatting for proper variable handling
-
-#### v0.1.1 (October 11, 2025)
-Complete CRUD operations implementation:
-- Dynamic schema discovery from Twenty metadata API
-- Create, Read (Get/List), Update, and Delete operations
-- Support for both standard and custom objects
-- Dynamic field loading based on selected resource
-- Intelligent caching with 10-minute TTL
-- Force refresh schema option
-
-#### v0.0.11 and earlier
-Foundation work:
-- Initial dynamic architecture design
-- GraphQL client integration
-- Basic schema fetching
-
----
-
-**Previous Implementation Series (v0.0.1-0.0.5 - OpenAPI-based):**
-
-*Note: Versions 0.0.1-0.0.5 used a different architecture based on static OpenAPI specifications. The current v0.1.x series represents a complete rewrite using dynamic schema discovery.*
-
-#### v0.0.5
-Simplified to build on n8n-openapi-node
-
-#### v0.0.4
-Compatible with Twenty's updated API in v0.40.7
-
-#### v0.0.3
-Compatible with Twenty's updated API in v0.33.4
-
-#### v0.0.1
-Initial release
 
 ## Credits
 

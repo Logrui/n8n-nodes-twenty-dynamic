@@ -1,0 +1,136 @@
+{
+  "test": "Job status field (SELECT)",
+  "timestamp": "2025-10-14T20:41:38.288Z",
+  "field": {
+    "name": "status",
+    "label": "Status",
+    "type": "SELECT",
+    "isNullable": true,
+    "optionsCount": 9
+  },
+  "pipeSeparatedValue": "status|select",
+  "n8nOptions": [
+    {
+      "name": "New",
+      "value": "NEW",
+      "description": "Color: pink"
+    },
+    {
+      "name": "Preparing Application",
+      "value": "PREPARING_APPLICATION",
+      "description": "Color: sky"
+    },
+    {
+      "name": "Sent Application",
+      "value": "SENT_APPLICATION",
+      "description": "Color: turquoise"
+    },
+    {
+      "name": "Interview Scheduling",
+      "value": "INTERVIEW_SCHEDULING",
+      "description": "Color: turquoise"
+    },
+    {
+      "name": "Discussions/Initial Conversations",
+      "value": "DISCUSSIONS_INITIAL_CONVERSATIONS",
+      "description": "Color: blue"
+    },
+    {
+      "name": "Post Interview Email Sent",
+      "value": "POST_INTERVIEW_EMAIL_SENT",
+      "description": "Color: blue"
+    },
+    {
+      "name": "No Response within 90 Days",
+      "value": "NO_RESPONSE_WITHIN_90_DAYS",
+      "description": "Color: pink"
+    },
+    {
+      "name": "Rejected",
+      "value": "REJECTED",
+      "description": "Color: red"
+    },
+    {
+      "name": "Passed",
+      "value": "PASSED",
+      "description": "Color: gray"
+    }
+  ],
+  "rawOptions": [
+    {
+      "id": "f752a3ed-5fdc-48dd-ae5a-ade1f2421df4",
+      "color": "pink",
+      "label": "New",
+      "value": "NEW",
+      "position": 0
+    },
+    {
+      "id": "c0eaa381-12d1-48e2-941e-2788970ab22c",
+      "color": "sky",
+      "label": "Preparing Application",
+      "value": "PREPARING_APPLICATION",
+      "position": 1
+    },
+    {
+      "id": "19ab2f42-156f-4c05-bb00-43271f58a720",
+      "color": "turquoise",
+      "label": "Sent Application",
+      "value": "SENT_APPLICATION",
+      "position": 2
+    },
+    {
+      "id": "2a00a3ce-174c-44bb-a001-58519dbb1dad",
+      "color": "turquoise",
+      "label": "Interview Scheduling",
+      "value": "INTERVIEW_SCHEDULING",
+      "position": 3
+    },
+    {
+      "id": "f88d9ab3-caf2-426b-b981-c8b7d0b5467d",
+      "color": "blue",
+      "label": "Discussions/Initial Conversations",
+      "value": "DISCUSSIONS_INITIAL_CONVERSATIONS",
+      "position": 4
+    },
+    {
+      "id": "db2bd756-b25e-47ca-8e76-8c2f2bd9772f",
+      "color": "blue",
+      "label": "Post Interview Email Sent",
+      "value": "POST_INTERVIEW_EMAIL_SENT",
+      "position": 5
+    },
+    {
+      "id": "b4760c16-64c6-4cfd-a53b-8033c4e614a5",
+      "color": "pink",
+      "label": "No Response within 90 Days",
+      "value": "NO_RESPONSE_WITHIN_90_DAYS",
+      "position": 6
+    },
+    {
+      "id": "b5cc78aa-f2aa-49aa-ae84-1870250f753f",
+      "color": "red",
+      "label": "Rejected",
+      "value": "REJECTED",
+      "position": 7
+    },
+    {
+      "id": "a73c7fd4-f470-4cd6-89e1-e53423155bf9",
+      "color": "gray",
+      "label": "Passed",
+      "value": "PASSED",
+      "position": 8
+    }
+  ],
+  "structureComparison": {
+    "selectAndMultiSelectIdentical": true,
+    "expectedFields": [
+      "id",
+      "color",
+      "label",
+      "value",
+      "position"
+    ],
+    "allFieldsPresent": true
+  },
+  "allTestsPassed": true
+}

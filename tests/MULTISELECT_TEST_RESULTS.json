@@ -1,0 +1,83 @@
+{
+  "test": "Company category field (MULTI_SELECT - built-in enum)",
+  "timestamp": "2025-10-14T20:55:07.562Z",
+  "field": {
+    "name": "category",
+    "label": "Category",
+    "type": "MULTI_SELECT",
+    "isBuiltInEnum": true,
+    "enumType": "CompanyCategoryEnum",
+    "optionsCount": 5
+  },
+  "pipeSeparatedValue": "category|multiSelect",
+  "n8nOptions": [
+    {
+      "name": "Venture Firm",
+      "value": "VENTURE_FIRM",
+      "description": "Color: gray"
+    },
+    {
+      "name": "Startup",
+      "value": "STARTUP",
+      "description": "Color: gray"
+    },
+    {
+      "name": "Portfolio Company",
+      "value": "PORTFOLIO_COMPANY",
+      "description": "Color: gray"
+    },
+    {
+      "name": "Pharma Company",
+      "value": "PHARMA_COMPANY",
+      "description": "Color: gray"
+    },
+    {
+      "name": "University",
+      "value": "UNIVERSITY",
+      "description": "Color: gray"
+    }
+  ],
+  "rawOptions": [
+    {
+      "id": "enum-VENTURE_FIRM",
+      "color": "gray",
+      "label": "Venture Firm",
+      "value": "VENTURE_FIRM",
+      "position": 0
+    },
+    {
+      "id": "enum-STARTUP",
+      "color": "gray",
+      "label": "Startup",
+      "value": "STARTUP",
+      "position": 1
+    },
+    {
+      "id": "enum-PORTFOLIO_COMPANY",
+      "color": "gray",
+      "label": "Portfolio Company",
+      "value": "PORTFOLIO_COMPANY",
+      "position": 2
+    },
+    {
+      "id": "enum-PHARMA_COMPANY",
+      "color": "gray",
+      "label": "Pharma Company",
+      "value": "PHARMA_COMPANY",
+      "position": 3
+    },
+    {
+      "id": "enum-UNIVERSITY",
+      "color": "gray",
+      "label": "University",
+      "value": "UNIVERSITY",
+      "position": 4
+    }
+  ],
+  "criticalFinding": {
+    "issue": "Built-in enum fields NOT in metadata API",
+    "solution": "Must use GraphQL introspection (__type query)",
+    "impact": "Refactoring plan needs update to handle both custom SELECT and built-in ENUM fields"
+  },
+  "allTestsPassed": true
+}

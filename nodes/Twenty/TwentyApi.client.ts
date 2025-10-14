@@ -28,6 +28,10 @@ export interface IFieldMetadata {
 		};
 		relationType: string;
 	} | null;
+	// Dual-source architecture fields
+	isBuiltInEnum?: boolean;  // True if this is a built-in enum field (from GraphQL)
+	enumType?: string;        // The GraphQL enum type name (e.g., 'CompanyCategoryEnum')
+	source?: 'metadata' | 'graphql';  // Where this field was discovered
 }
 
 export interface IObjectMetadata {
@@ -440,6 +444,77 @@ export async function getDataSchemaForObject(
 		});
 
 	return fields;
+}
+
+/**
+ * Query GraphQL type schema for a resource using introspection.
+ * Used to discover built-in enum fields that are NOT in the metadata API.
+ * 
+ * @param {TwentyApiContext} this The context object for the n8n function.
+ * @param {string} typeName The GraphQL type name (e.g., 'Company', 'Person')
+ * @returns {Promise<any>} The GraphQL type schema with fields and types
+ */
+export async function queryGraphQLType(
+	this: TwentyApiContext,
+	typeName: string,
+): Promise<any> {
+	const query = `
+		query GetTypeSchema {
+			__type(name: "${typeName}") {
+				name
+				fields {
+					name
+					type {
+						name
+						kind
+						ofType {
+							name
+							kind
+						}
+					}
+				}
+			}
+		}
+	`;
+	
+	const response: any = await twentyApiRequest.call(this, 'graphql', query);
+	return response;
+}
+
+/**
+ * Query enum values for a GraphQL enum type.
+ * Used to get options for SELECT/MULTI_SELECT fields that are built-in enums.
+ * 
+ * @param {TwentyApiContext} this The context object for the n8n function.
+ * @param {string} enumName The enum type name (e.g., 'CompanyCategoryEnum')
+ * @returns {Promise<Array<{name: string, label: string}>>} Array of enum values with formatted labels
+ */
+export async function queryEnumValues(
+	this: TwentyApiContext,
+	enumName: string,
+): Promise<Array<{name: string, label: string}>> {
+	const query = `
+		query GetEnumValues {
+			__type(name: "${enumName}") {
+				name
+				enumValues {
+					name
+					description
+				}
+			}
+		}
+	`;
+	
+	const response: any = await twentyApiRequest.call(this, 'graphql', query);
+	
+	if (response.__type?.enumValues) {
+		return response.__type.enumValues.map((v: any) => ({
+			name: v.name,
+			label: v.name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase()),
+		}));
+	}
+	
+	return [];
 }
 
 /**

@@ -56,7 +56,12 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 	const result: Record<string, any> = {};
 
 	for (const field of fields) {
-		const fieldName = field.fieldName;
+		// Extract actual field name from pipe-separated value (fieldName|fieldType)
+		// Maintain backward compatibility with plain field names (no pipe)
+		const actualFieldName = field.fieldName.includes('|') 
+			? field.fieldName.split('|')[0] 
+			: field.fieldName;
+		
 		const fieldType = field.fieldType || 'simple';
 
 		// Transform based on explicitly selected field type
@@ -67,7 +72,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				if (field.firstName) fullName.firstName = field.firstName;
 				if (field.lastName) fullName.lastName = field.lastName;
 				if (Object.keys(fullName).length > 0) {
-					result[fieldName] = fullName;
+					result[actualFieldName] = fullName;
 				}
 				break;
 
@@ -77,7 +82,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				if (field.primaryLinkUrl) links.primaryLinkUrl = field.primaryLinkUrl;
 				if (field.primaryLinkLabel) links.primaryLinkLabel = field.primaryLinkLabel;
 				if (Object.keys(links).length > 0) {
-					result[fieldName] = links;
+					result[actualFieldName] = links;
 				}
 				break;
 
@@ -90,7 +95,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				}
 				if (field.currencyCode) currency.currencyCode = field.currencyCode;
 				if (Object.keys(currency).length > 0) {
-					result[fieldName] = currency;
+					result[actualFieldName] = currency;
 				}
 				break;
 
@@ -110,7 +115,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 					address.addressLng = field.addressLng;
 				}
 				if (Object.keys(address).length > 0) {
-					result[fieldName] = address;
+					result[actualFieldName] = address;
 				}
 				break;
 
@@ -119,7 +124,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				const emails: any = {};
 				if (field.primaryEmail) emails.primaryEmail = field.primaryEmail;
 				if (Object.keys(emails).length > 0) {
-					result[fieldName] = emails;
+					result[actualFieldName] = emails;
 				}
 				break;
 
@@ -130,28 +135,28 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				if (field.primaryPhoneCountryCode) phones.primaryPhoneCountryCode = field.primaryPhoneCountryCode;
 				if (field.primaryPhoneCallingCode) phones.primaryPhoneCallingCode = field.primaryPhoneCallingCode;
 				if (Object.keys(phones).length > 0) {
-					result[fieldName] = phones;
+					result[actualFieldName] = phones;
 				}
 				break;
 
 			case 'select':
 				// Select fields - single value from dropdown
 				if (field.fieldSelectValue !== undefined && field.fieldSelectValue !== '') {
-					result[fieldName] = field.fieldSelectValue;
+					result[actualFieldName] = field.fieldSelectValue;
 				}
 				break;
 
 			case 'multiSelect':
 				// Multi-Select fields - array of values from dropdown
 				if (field.fieldMultiSelectValue && Array.isArray(field.fieldMultiSelectValue) && field.fieldMultiSelectValue.length > 0) {
-					result[fieldName] = field.fieldMultiSelectValue;
+					result[actualFieldName] = field.fieldMultiSelectValue;
 				}
 				break;
 
 			case 'boolean':
 				// Boolean fields - true/false value
 				if (field.fieldBooleanValue !== undefined) {
-					result[fieldName] = field.fieldBooleanValue;
+					result[actualFieldName] = field.fieldBooleanValue;
 				}
 				break;
 
@@ -159,7 +164,7 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 			default:
 				// Simple fields - use fieldValue directly
 				if (field.fieldValue !== undefined && field.fieldValue !== '') {
-					result[fieldName] = field.fieldValue;
+					result[actualFieldName] = field.fieldValue;
 				}
 				break;
 		}
