@@ -15,6 +15,13 @@ export interface IFieldMetadata {
 	isWritable: boolean;
 	isActive?: boolean;
 	isSystem?: boolean;
+	options?: Array<{
+		id: string;
+		color: string;
+		label: string;
+		value: string;
+		position: number;
+	}>;
 	relationMetadata?: {
 		toObjectMetadata: {
 			nameSingular: string;
@@ -160,6 +167,7 @@ export async function getSchemaMetadata(
 									isUIReadOnly
 									isActive
 									isSystem
+									options
 								}
 							}
 						}
@@ -194,6 +202,8 @@ export async function getSchemaMetadata(
 				// Additional field metadata for debugging
 				isActive: fieldEdge.node.isActive,
 				isSystem: fieldEdge.node.isSystem,
+				// Options for SELECT and MULTI_SELECT fields
+				options: fieldEdge.node.options || undefined,
 				// relationMetadata not available in current API, set to null
 				relationMetadata: null,
 			})),

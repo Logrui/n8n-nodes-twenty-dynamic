@@ -4,10 +4,12 @@ This is an n8n community node for **Twenty CRM** that uses dynamic schema discov
 
 🎯 **BETA VERSION - Approaching Production Ready** 🎯
 
-**Current Status (v0.3.10):**
+**Current Status (v0.4.2):**
 - ✅ Dynamic schema discovery from Twenty CRM (metadata + GraphQL introspection)
 - ✅ All CRUD operations fully implemented and tested
-- ✅ Complex field types supported (FullName, Links, Currency, Address, Emails, Phones)
+- ✅ Complex field types supported (FullName, Links, Currency, Address, Emails, Phones, SELECT, MULTI_SELECT)
+- ✅ **Auto-detection of field types** - Correct Field Type automatically selected based on field
+- ✅ **Dynamic SELECT options** - Dropdown choices loaded directly from your Twenty CRM
 - ✅ **Smart field selection** - Field Type suggestions based on Twenty's metadata
 - ✅ **Conditional field display** - only relevant fields appear based on Field Type selection
 - ✅ Clean, intuitive UI with no field clutter
@@ -16,10 +18,11 @@ This is an n8n community node for **Twenty CRM** that uses dynamic schema discov
 - 🧪 **Beta testing** - Core functionality stable, additional features in development
 - ⚠️ **Production use with caution** - Test thoroughly in your environment first
 
-**Recent Improvements (v0.3.x):**
-- Field selection now shows Twenty field type + suggested n8n Field Type to use (v0.3.10)
-- Added Emails field type (Primary Email) for person.emails and similar fields (v0.3.9)
-- Added Phones field type (Primary Phone Number + Country/Calling Codes) (v0.3.9)
+**Recent Improvements (v0.4.x):**
+- **CRITICAL FIX:** Field Type auto-detection now works - recommended type appears first with ⭐ (v0.4.1)
+- **CRITICAL FIX:** SELECT/MULTI_SELECT dropdown options now load correctly (v0.4.1)
+- Field Type dropdown is now dynamic and shows the recommended type based on your selection
+- SELECT and MULTI_SELECT field types with real-time dropdown options (v0.4.0)
 - Conditional display using path-based displayOptions - only relevant fields show (v0.3.8)
 - Fixed annoying UX bug where 12+ fields appeared for every field selection (v0.3.8)
 - Explicit field type selector - users choose Simple/FullName/Link/Currency/Address/Emails/Phones (v0.3.7-v0.3.9)
@@ -31,7 +34,7 @@ This is an n8n community node for **Twenty CRM** that uses dynamic schema discov
 **Known Limitations:**
 - Advanced filtering UI still basic (can use expressions for complex filters)
 - Emails/Phones field types only support primary fields (not additionalEmails/additionalPhones arrays)
-- Some Twenty-specific field types may need additional handling (SELECT, MULTI_SELECT, RELATION, etc.)
+- RELATION field type not yet supported (foreign key relationships)
 - Relational fields work but UI could be improved
 
 **Feedback Welcome:** This node is approaching production readiness. Please report issues on [GitHub](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues).
@@ -255,13 +258,41 @@ Currently in beta testing phase. Compatible with both self-hosted and cloud inst
 
 ## Version History
 
-**Current Development Series (v0.3.x - Complex Fields & Resource-Aware Implementation):**
+**Current Development Series (v0.4.x - SELECT/MULTI_SELECT Fields):**
+
+#### v0.4.2 (October 14, 2025)
+- **CRITICAL FIX:** loadOptionsMethod parameter access corrected for fixedCollection context
+- Use `getCurrentNodeParameter('fieldName')` instead of complex path resolution
+- Added `loadOptionsDependsOn: ['fieldName']` for proper dependency tracking
+- SELECT and MULTI_SELECT dropdowns now populate correctly with options
+- Field Type auto-detection now triggers properly when field changes
+
+#### v0.4.1 (October 14, 2025)
+- **CRITICAL FIX:** Field Type auto-detection now works correctly
+- Field Type dropdown shows recommended type with ⭐ star marker
+- Recommended type appears first in dropdown based on Twenty field type
+- **CRITICAL FIX:** SELECT and MULTI_SELECT options now load properly
+- Fixed loadOptionsMethod parameter path resolution
+- SELECT dropdowns now populate with actual options from Twenty CRM
+- Field Type description updated to clarify auto-detection behavior
+
+#### v0.4.0 (October 14, 2025)
+- **MAJOR FEATURE:** SELECT and MULTI_SELECT field types with dynamic options
+- Dropdown options populated in real-time from your Twenty CRM instance
+- Options loaded via metadata API with id, label, value, color, and position
+- SELECT fields use single-select dropdown (type: 'options')
+- MULTI_SELECT fields use multi-select dropdown (type: 'multiOptions')
+- Works with both standard and custom SELECT/MULTI_SELECT fields
+- Field type suggestions updated to recommend "Select" and "Multi-Select"
+- Example fields: job.status, opportunity.stage, workflow.statuses, person.category
+
+**Previous Development Series (v0.3.x - Complex Fields & Resource-Aware Implementation):**
 
 #### v0.3.10 (October 12, 2025)
 - **UX IMPROVEMENT:** Field selection dropdown now shows Twenty field type + suggested n8n Field Type
 - Examples: "name (Name) - Twenty Type: FullName → Use 'Full Name' (required)"
 - Helps users choose the correct Field Type without guessing
-- Indicates unsupported types (SELECT, MULTI_SELECT, RELATION)
+- Indicates unsupported types (RELATION)
 
 #### v0.3.9 (October 12, 2025)
 - **NEW FEATURE:** Added Emails field type with Primary Email support

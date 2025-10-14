@@ -13,7 +13,8 @@
     "test:fullname": "ts-node graphql_introspect_fullname.ts",
     "test:person": "ts-node graphql_create_person_fullname.ts",
     "test:compare": "node introspect-company-vs-people.js",
-    "test:complex-fields": "node introspect-complex-fields.js"
+    "test:complex-fields": "node introspect-complex-fields.js",
+    "test:select-options": "node introspect-select-options.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

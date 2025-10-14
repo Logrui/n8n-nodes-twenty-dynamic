@@ -10,7 +10,7 @@
  */
 export interface IFieldData {
 	fieldName: string;
-	fieldType?: string; // 'simple', 'fullName', 'link', 'currency', 'address', 'emails', 'phones'
+	fieldType?: string; // 'simple', 'fullName', 'link', 'currency', 'address', 'emails', 'phones', 'select', 'multiSelect', 'boolean'
 	fieldValue?: any;
 	// FullName fields
 	firstName?: string;
@@ -36,6 +36,12 @@ export interface IFieldData {
 	primaryPhoneNumber?: string;
 	primaryPhoneCountryCode?: string;
 	primaryPhoneCallingCode?: string;
+	// Select fields
+	fieldSelectValue?: string;
+	// Multi-Select fields
+	fieldMultiSelectValue?: string[];
+	// Boolean field
+	fieldBooleanValue?: boolean;
 }
 
 /**
@@ -125,6 +131,27 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				if (field.primaryPhoneCallingCode) phones.primaryPhoneCallingCode = field.primaryPhoneCallingCode;
 				if (Object.keys(phones).length > 0) {
 					result[fieldName] = phones;
+				}
+				break;
+
+			case 'select':
+				// Select fields - single value from dropdown
+				if (field.fieldSelectValue !== undefined && field.fieldSelectValue !== '') {
+					result[fieldName] = field.fieldSelectValue;
+				}
+				break;
+
+			case 'multiSelect':
+				// Multi-Select fields - array of values from dropdown
+				if (field.fieldMultiSelectValue && Array.isArray(field.fieldMultiSelectValue) && field.fieldMultiSelectValue.length > 0) {
+					result[fieldName] = field.fieldMultiSelectValue;
+				}
+				break;
+
+			case 'boolean':
+				// Boolean fields - true/false value
+				if (field.fieldBooleanValue !== undefined) {
+					result[fieldName] = field.fieldBooleanValue;
 				}
 				break;
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
     IExecuteFunctions,
     INodeType,
     INodeTypeDescription,
@@ -118,7 +118,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'The UUID of the record to retrieve, update, or delete. ⚠️ Delete operations are permanent and cannot be undone.',
+                description: 'The UUID of the record to retrieve, update, or delete. ?? Delete operations are permanent and cannot be undone.',
                 placeholder: 'e.g., 123e4567-e89b-12d3-a456-426614174000',
             },
             // Fields collection (for Create and Update operations)
@@ -162,6 +162,10 @@ export class Twenty implements INodeType {
                                         value: 'address',
                                     },
                                     {
+                                        name: 'Boolean (True/False)',
+                                        value: 'boolean',
+                                    },
+                                    {
                                         name: 'Currency (Amount + Currency Code)',
                                         value: 'currency',
                                     },
@@ -178,8 +182,16 @@ export class Twenty implements INodeType {
                                         value: 'link',
                                     },
                                     {
+                                        name: 'Multi-Select (Multiple Choices)',
+                                        value: 'multiSelect',
+                                    },
+                                    {
                                         name: 'Phones (Primary Phone Details)',
                                         value: 'phones',
+                                    },
+                                    {
+                                        name: 'Select (Single Choice)',
+                                        value: 'select',
                                     },
                                     {
                                         name: 'Simple Value (Text, Number, Date, Etc.)',
@@ -187,7 +199,30 @@ export class Twenty implements INodeType {
                                     },
                                 ],
                                 default: 'simple',
-                                description: 'The type of data you are entering. Use Simple for most fields (text, numbers, booleans, dates). Use specific types for complex objects like emails, phones, addresses, etc.',
+                                description: 'The type of field. Check the Field Name description for the recommended type based on Twenty\'s schema.',
+                            },
+                            // Boolean field
+                            {
+                                displayName: 'Boolean Value',
+                                name: 'fieldBooleanValue',
+                                type: 'options',
+                                options: [
+                                    {
+                                        name: 'True',
+                                        value: true,
+                                    },
+                                    {
+                                        name: 'False',
+                                        value: false,
+                                    },
+                                ],
+                                displayOptions: {
+                                    show: {
+                                        fieldType: ['boolean'],
+                                    },
+                                },
+                                default: false,
+                                description: 'Select True or False',
                             },
                             // Simple field value
                             {
@@ -196,7 +231,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['simple'],
+                                        fieldType: ['simple'],
                                     },
                                 },
                                 default: '',
@@ -210,7 +245,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['fullName'],
+                                        fieldType: ['fullName'],
                                     },
                                 },
                                 default: '',
@@ -223,7 +258,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['fullName'],
+                                        fieldType: ['fullName'],
                                     },
                                 },
                                 default: '',
@@ -237,7 +272,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['link'],
+                                        fieldType: ['link'],
                                     },
                                 },
                                 default: '',
@@ -250,7 +285,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['link'],
+                                        fieldType: ['link'],
                                     },
                                 },
                                 default: '',
@@ -264,7 +299,7 @@ export class Twenty implements INodeType {
                                 type: 'number',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['currency'],
+                                        fieldType: ['currency'],
                                     },
                                 },
                                 default: 0,
@@ -277,7 +312,7 @@ export class Twenty implements INodeType {
                                 type: 'options',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['currency'],
+                                        fieldType: ['currency'],
                                     },
                                 },
                                 options: [
@@ -300,7 +335,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -313,7 +348,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -326,7 +361,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -339,7 +374,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -352,7 +387,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -365,7 +400,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: '',
@@ -378,7 +413,7 @@ export class Twenty implements INodeType {
                                 type: 'number',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: undefined,
@@ -391,7 +426,7 @@ export class Twenty implements INodeType {
                                 type: 'number',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['address'],
+                                        fieldType: ['address'],
                                     },
                                 },
                                 default: undefined,
@@ -405,7 +440,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['emails'],
+                                        fieldType: ['emails'],
                                     },
                                 },
                                 default: '',
@@ -419,7 +454,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['phones'],
+                                        fieldType: ['phones'],
                                     },
                                 },
                                 default: '',
@@ -431,7 +466,7 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['phones'],
+                                        fieldType: ['phones'],
                                     },
                                 },
                                 default: '',
@@ -444,12 +479,46 @@ export class Twenty implements INodeType {
                                 type: 'string',
                                 displayOptions: {
                                     show: {
-                                        '/fields.field[0].fieldType': ['phones'],
+                                        fieldType: ['phones'],
                                     },
                                 },
                                 default: '',
                                 description: 'International calling code with plus sign',
                                 placeholder: '+1',
+                            },
+                            // Select field
+                            {
+                                displayName: 'Value Name or ID',
+                                name: 'fieldSelectValue',
+                                type: 'options',
+                                typeOptions: {
+                                    loadOptionsMethod: 'getOptionsForSelectField',
+                                    loadOptionsDependsOn: ['fieldName'],
+                                },
+                                displayOptions: {
+                                    show: {
+                                        fieldType: ['select'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                            },
+                            // Multi-select field
+                            {
+                                displayName: 'Values Names or IDs',
+                                name: 'fieldMultiSelectValue',
+                                type: 'multiOptions',
+                                typeOptions: {
+                                    loadOptionsMethod: 'getOptionsForSelectField',
+                                    loadOptionsDependsOn: ['fieldName'],
+                                },
+                                displayOptions: {
+                                    show: {
+                                        fieldType: ['multiSelect'],
+                                    },
+                                },
+                                default: [],
+                                description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
                             },
                         ],
                     },
@@ -556,22 +625,22 @@ export class Twenty implements INodeType {
                         let suggestedFieldType = '';
                         switch (field.type) {
                             case 'FullName':
-                                suggestedFieldType = ' → Use "Full Name"';
+                                suggestedFieldType = ' ? Use "Full Name"';
                                 break;
                             case 'Links':
-                                suggestedFieldType = ' → Use "Link"';
+                                suggestedFieldType = ' ? Use "Link"';
                                 break;
                             case 'Currency':
-                                suggestedFieldType = ' → Use "Currency"';
+                                suggestedFieldType = ' ? Use "Currency"';
                                 break;
                             case 'Address':
-                                suggestedFieldType = ' → Use "Address"';
+                                suggestedFieldType = ' ? Use "Address"';
                                 break;
                             case 'EMAILS':
-                                suggestedFieldType = ' → Use "Emails"';
+                                suggestedFieldType = ' ? Use "Emails"';
                                 break;
                             case 'PHONES':
-                                suggestedFieldType = ' → Use "Phones"';
+                                suggestedFieldType = ' ? Use "Phones"';
                                 break;
                             case 'TEXT':
                             case 'NUMBER':
@@ -580,13 +649,16 @@ export class Twenty implements INodeType {
                             case 'BOOLEAN':
                             case 'UUID':
                             case 'RAW_JSON':
-                                suggestedFieldType = ' → Use "Simple"';
+                                suggestedFieldType = ' ? Use "Simple"';
                                 break;
-                            // SELECT, MULTI_SELECT, RELATION types don't have implementations yet
                             case 'SELECT':
+                                suggestedFieldType = ' ? Use "Select"';
+                                break;
                             case 'MULTI_SELECT':
+                                suggestedFieldType = ' ? Use "Multi-Select"';
+                                break;
                             case 'RELATION':
-                                suggestedFieldType = ' → Not yet supported';
+                                suggestedFieldType = ' ? Not yet supported';
                                 break;
                         }
 
@@ -622,6 +694,169 @@ export class Twenty implements INodeType {
                     return options;
                 } catch (error) {
                     throw new NodeOperationError(this.getNode(), `Failed to load fields for resource: ${error.message}`);
+                }
+            },
+
+            /**
+             * Load options for SELECT and MULTI_SELECT fields
+             * Returns the available options from Twenty's metadata
+             */
+            async getOptionsForSelectField(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                try {
+                    // Get the selected resource and field name
+                    const resource = this.getCurrentNodeParameter('resource') as string;
+                    if (!resource) {
+                        return [];
+                    }
+
+                    // Get the field name - in loadOptions context for fixedCollection items,
+                    // we can access sibling parameters using getCurrentNodeParameter
+                    const fieldName = this.getCurrentNodeParameter('fieldName') as string;
+                    
+                    if (!fieldName) {
+                        return [];
+                    }
+
+                    // Get full schema to find field options
+                    const allFields = await getDataSchemaForObject.call(this, resource);
+                    const selectedField = allFields.find(f => f.name === fieldName);
+
+                    if (!selectedField || !selectedField.options || selectedField.options.length === 0) {
+                        return [];
+                    }
+
+                    // Transform Twenty options to n8n dropdown options
+                    // Sort by position to maintain order
+                    const sortedOptions = [...selectedField.options].sort((a, b) => a.position - b.position);
+                    
+                    return sortedOptions.map(opt => ({
+                        name: opt.label,
+                        value: opt.value,
+                        description: `Color: ${opt.color}`,
+                    }));
+                } catch (error) {
+                    // Return empty array on error to prevent UI breaks
+                    return [];
+                }
+            },
+
+            /**
+             * Auto-detect field type based on selected field
+             * Returns suggested field type options based on Twenty's metadata
+             */
+            async getFieldTypeOptions(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                // Default options
+                const defaultOptions: INodePropertyOptions[] = [
+                    {
+                        name: 'Address (Street, City, State, Etc.)',
+                        value: 'address',
+                    },
+                    {
+                        name: 'Currency (Amount + Currency Code)',
+                        value: 'currency',
+                    },
+                    {
+                        name: 'Emails (Primary Email Address)',
+                        value: 'emails',
+                    },
+                    {
+                        name: 'Full Name (First/Last Name)',
+                        value: 'fullName',
+                    },
+                    {
+                        name: 'Link (URL With Label)',
+                        value: 'link',
+                    },
+                    {
+                        name: 'Multi-Select (Multiple Choices)',
+                        value: 'multiSelect',
+                    },
+                    {
+                        name: 'Phones (Primary Phone Details)',
+                        value: 'phones',
+                    },
+                    {
+                        name: 'Select (Single Choice)',
+                        value: 'select',
+                    },
+                    {
+                        name: 'Simple Value (Text, Number, Date, Etc.)',
+                        value: 'simple',
+                    },
+                ];
+
+                try {
+                    // Get the selected resource and field name
+                    const resource = this.getCurrentNodeParameter('resource') as string;
+                    if (!resource) {
+                        return defaultOptions;
+                    }
+
+                    // Try to get the field name
+                    const fieldName = this.getCurrentNodeParameter('fieldName') as string;
+
+                    if (!fieldName) {
+                        return defaultOptions;
+                    }
+
+                    // Get full schema to find field type
+                    const allFields = await getDataSchemaForObject.call(this, resource);
+                    const selectedField = allFields.find((f: any) => f.name === fieldName);
+
+                    if (!selectedField) {
+                        return defaultOptions;
+                    }
+
+                    // Map Twenty field type to n8n field type and put it first in the list
+                    let suggestedValue: string = 'simple';
+
+                    switch (selectedField.type) {
+                        case 'FullName':
+                            suggestedValue = 'fullName';
+                            break;
+                        case 'Links':
+                            suggestedValue = 'link';
+                            break;
+                        case 'Currency':
+                            suggestedValue = 'currency';
+                            break;
+                        case 'Address':
+                            suggestedValue = 'address';
+                            break;
+                        case 'EMAILS':
+                            suggestedValue = 'emails';
+                            break;
+                        case 'PHONES':
+                            suggestedValue = 'phones';
+                            break;
+                        case 'SELECT':
+                            suggestedValue = 'select';
+                            break;
+                        case 'MULTI_SELECT':
+                            suggestedValue = 'multiSelect';
+                            break;
+                        default:
+                            suggestedValue = 'simple';
+                    }
+
+                    // Reorder options to put the suggested one first with a special marker
+                    const suggestedOption = defaultOptions.find((opt: INodePropertyOptions) => opt.value === suggestedValue);
+                    const otherOptions = defaultOptions.filter((opt: INodePropertyOptions) => opt.value !== suggestedValue);
+
+                    if (suggestedOption) {
+                        return [
+                            {
+                                ...suggestedOption,
+                                name: `${suggestedOption.name} ? (Recommended)`,
+                                description: `Automatically detected from Twenty schema. Type: ${selectedField.type}`,
+                            },
+                            ...otherOptions,
+                        ];
+                    }
+
+                    return defaultOptions;
+                } catch (error) {
+                    return defaultOptions;
                 }
             },
         },
