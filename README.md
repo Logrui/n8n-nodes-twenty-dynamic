@@ -16,32 +16,14 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 
 ## Features
 
-✨ **Dual-Source Architecture**: Combines Metadata API and GraphQL introspection for complete field coverage  
-✨ **Resource Group Filtering**: Organize resources by All, System, Custom, Database, and Database Item groups  
-✨ **Automatic Field Detection**: Field types auto-detected and configured (no manual type selection)  
-✨ **Built-in Enum Support**: Now supports all Twenty built-in enums (Person.gender, Opportunity.stage, etc.)  
+✨ **Dual-Source Architecture**: Combines Twenty Metadata API and GraphQL introspection for complete field coverage and efficient API queries for 
 ✨ **Dynamic Resource Discovery**: Automatically fetches standard and custom objects from your Twenty instance  
-✨ **Auto-Adapting Fields**: Discovers all available fields dynamically (no hardcoded field lists)  
-✨ **Custom Object Support**: Works seamlessly with your custom objects and fields  
-✨ **CRUD Operations**: Full Create, Read, Update, and Delete support  
-✨ **Complex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
+✨ **Full CRUD Operations and Batch Operations**: Full Create, Read, Update, and Delete support w/ new Update/Create if not found operation 
+✨ **Support forComplex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
 ✨ **SELECT/MULTI_SELECT Fields**: Dynamic dropdowns with real-time option loading  
 ✨ **Smart Caching**: 10-minute TTL with force refresh option  
 ✨ **Zero Dependencies**: Built with n8n native HTTP helpers only  
 
-## Current Status
-
-**v0.5.0** - Production-ready with dual-source architecture for complete field coverage.
-
-### What's New in v0.5.0
-
-- **Dual-Source Field Discovery**: Queries both Metadata API and GraphQL introspection for 100% field coverage
-- **Built-in Enum Support**: Now discovers and supports all Twenty built-in enum fields (previously invisible)
-- **Automatic Type Detection**: Field types auto-detected and hidden from users (improved UX)
-- **Smart Fallback**: Tries Metadata API first (custom SELECTs), falls back to GraphQL (built-in enums)
-- **Complete Coverage**: All Twenty CRM fields now supported, including Person.gender, Opportunity.stage, etc.
-
-See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ## About This Project
 
@@ -114,7 +96,9 @@ This node dynamically discovers available objects from your Twenty CRM instance 
 - **Get**: Retrieve a single record by ID
 - **Update**: Update an existing record (partial updates supported)
 - **Delete**: Delete a record by ID (permanent - cannot be undone)
+- **Update/Create if not found**: Upsert operation for selectively updating or creating a record
 - **List/Search**: Retrieve multiple records with pagination (up to 100 records)
+- **Batch**: Many operations for Get, Create, Update
 
 **Dynamic Features:**
 - Automatically discovers all standard Twenty objects (Company, Person, Opportunity, Task, Note, etc.)
@@ -131,54 +115,54 @@ This node dynamically discovers available objects from your Twenty CRM instance 
 - **Simple fields**: Standard text, number, date, and boolean inputs
 - **Resource-aware**: Same field name behaves differently based on object type (e.g., Company.name is text, Person.name is FullName)
 
-## Standard Objects Supported
+## Supported Features
+	-Dynamic Field Integrations for All Standard and Custom Data Models
+	-Standard and Custom Database/Field Retrieval
+	-Standard Integrated Operations
+		-Standard CRUD Operations
+		-Standard Integrations
+			-List people by Company
+			-Get notes by Company
+			-Get notes by Person
+	-Operations:
+		-Create
+		-Delete
+		-Get
+		-List/Search
+		-Update
+		-Create Many
+		-Delete Many
+		-Get Many
+		-Find Many
+		-Update/Create Many
 
-All Twenty standard objects are automatically discovered and supported:
-- **General**: Core system objects
-- **API Keys**: API key management
-- **Attachments**: File attachments
-- **Blocklists**: Blocked contacts/domains
-- **Calendar Channels**: Calendar integrations
-- **Calendar Events**: Calendar event management
-- **Calendar Event Participants**: Event attendees
-- **Companies**: Organization/company records
-- **Connected Accounts**: External account connections
-- **Favorites**: User favorites
-- **Favorite Folders**: Favorite organization
-- **Message Channels**: Messaging integrations
-- **Message Threads**: Conversation threads
-- **Messages**: Individual messages
-- **Message Participants**: Message recipients
-- **Message Folders**: Message organization
-- **Notes**: Note records
-- **Note Targets**: Note associations
-- **Opportunities**: Sales opportunities
-- **People**: Contact/person records
-- **Tasks**: Task management
-- **Task Targets**: Task associations
-- **Timeline Activities**: Activity tracking
-- **Views**: Custom views
-- **View Fields**: View field configurations
-- **View Filters**: View filtering
-- **View Filter Groups**: Filter grouping
-- **View Groups**: View grouping
-- **View Sorts**: View sorting
-- **Webhooks**: Webhook configurations
-- **Workflows**: Workflow automation
-- **Workflow Runs**: Workflow execution history
-- **Workflow Versions**: Workflow versioning
-- **Workflow Automated Triggers**: Workflow triggers
-- **Workspace Members**: Workspace user management
+## Standard Databases
+	-Companies
+	-People
+	-Notes
+	-Tasks
+	-Workflows
+	-Workflow Runs
 
-## Dynamic Custom Object Support
+## System Databases
+	-Attachments
+    -Calendar Events
+	-Messages
+	-Message Channels
+	-Note Targets, etc
 
-**Automatically discovers and supports:**
+## Custom Dynamic Databases and Fields
+	-Support for custom databases and most fields Certain complex fields that are objects are still  WIP. 
+	-Please report if you find an issue https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues
+
+
+**Automatically discovers and supports your custom Databases/Fields in Twenty:**
 - Custom objects you create in Twenty
 - Custom fields on standard objects
 - Custom complex field types
 - Adapts to schema changes without node updates
 
-**Note:** Certain complex custom field types that are objects may still be work-in-progress. Please report any issues with custom fields on GitHub.
+**Note:** Majority of fields are supported Certain complex custom field types that are objects may still be work-in-progress. Please report any issues with custom fields on GitHub.
 
 ## Credentials
 
@@ -209,48 +193,12 @@ Copy the API key. Click 'Add Credential' in n8n and search for 'Twenty API'. Pro
 - ⏳ Schema versioning and change detection
 - ⏳ Support for Twenty "Views"
 
-See [PLAN_V2.md](PLAN_V2.md) for detailed development roadmap.
-
-## Architecture
-
-**Dynamic Schema Discovery:**
-```
-User Opens Node → Check Cache (10min TTL) → Fetch /metadata if stale
-                                          ↓
-                              Parse Objects & Fields → Build UI Options
-```
-
-**Query Construction Flow:**
-```
-User Selects Resource → Load Fields Dynamically → User Fills Values
-                                                 ↓
-                              Build GraphQL Query String → Execute via HTTP Helper
-```
-
-**Key Components:**
-- `Twenty.node.ts`: Main node implementation with UI definition and operation handlers
-- `TwentyApi.client.ts`: Helper functions for schema discovery and query building
-- `FieldParameters.ts`: Centralized field parameter definitions for complex types
-- `FieldTransformation.ts`: Data transformation logic (flat inputs → nested GraphQL objects)
-- `ComplexFieldDetection.ts`: Field type detection utilities
-- `TwentyApi.credentials.ts`: Credential definition with caching support
-
-**No External Dependencies:** All API communication uses n8n's native `this.helpers.httpRequestWithAuthentication` method, following n8n best practices.
-
-## Compatibility
-
-**Tested and verified with:**
-- **Twenty CRM**: v0.40+ (tested with v1.0.3)
-- **n8n**: v1.91+ (tested with v1.91.3)
-
-Compatible with both self-hosted and cloud instances of Twenty CRM.
 
 ## Resources
 
 * [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 * [Twenty developer documentation](https://twenty.com/developers/)
 * [Twenty GraphQL API documentation](https://twenty.com/developers/section/graphql)
-* [Project Development Plan](PLAN_V2.md)
 * [Changelog](CHANGELOG.md)
 * [GitHub Repository](https://github.com/Logrui/n8n-nodes-twenty-dynamic)
 * [npm Package](https://www.npmjs.com/package/n8n-nodes-twenty-dynamic)
@@ -258,14 +206,9 @@ Compatible with both self-hosted and cloud instances of Twenty CRM.
 ## Credits
 
 **Dynamic node and custom objects integration:**
-- Primary development by [Logrui](https://github.com/Logrui)
-- Based on dynamic architecture concepts from [s-yhc](https://github.com/s-yhc/n8n-nodes-twenty-dynamic)
+- Primary development by [s-yhc] (https://github.com/s-yhc)
+- Based on dynamic architecture concepts from [s-yhc] (https://github.com/s-yhc)
 
-**Previous versions (v0.0.x OpenAPI-based):**
-The v0.1.x and v0.3.x series represent a complete rewrite with dynamic architecture. Previous versions (v0.0.1-0.0.5) were based on work by:
-- [devlikeapro](https://github.com/devlikeapro/n8n-openapi-node) - Generic n8n node builders for OpenAPI specs
-- [ivov](https://github.com/ivov) - Early OpenAPI integration tools
-- [feelgood-interface](https://github.com/feelgood-interface) - Additional OpenAPI tooling
 
 **Community Contributors:**
 - Testing and feedback from the n8n and Twenty communities

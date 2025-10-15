@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "0.9.1",
-  "description": "n8n node to call Twenty CRM's API",
+  "version": "0.9.2",
+  "description": "n8n node for Twenty CRM with custom database and field support",
   "keywords": [
     "n8n-community-node-package"
   ],

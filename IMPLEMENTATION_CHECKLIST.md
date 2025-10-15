@@ -316,7 +316,7 @@ for (const field of fields) {
 3. [ ] Create test workflow:
    - Trigger: Manual
    - Node 1: Set node with test data
-   - Node 2: Twenty node (Create One)
+   - Node 2: Twenty node (Create)
 4. [ ] Configure Twenty node:
    - Object: "Company"
    - Add fields:
