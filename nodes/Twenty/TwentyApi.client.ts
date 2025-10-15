@@ -145,6 +145,80 @@ export async function twentyApiRequest<T>(
 }
 
 /**
+ * Makes an authenticated REST API request to the Twenty API.
+ * Used for operations that benefit from REST's automatic field handling (Get, List, etc.)
+ *
+ * @param {TwentyApiContext} this The context object for the n8n function.
+ * @param {string} method HTTP method (GET, POST, PATCH, DELETE)
+ * @param {string} path REST API path (e.g., '/people/{id}')
+ * @param {object} [body] Optional request body for POST/PATCH
+ * @returns {Promise<T>} A promise that resolves to the response data.
+ */
+export async function twentyRestApiRequest<T>(
+	this: TwentyApiContext,
+	method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+	path: string,
+	body?: object,
+): Promise<T> {
+	const credentials = await this.getCredentials('twentyApi');
+
+	// Remove /graphql or /metadata from domain if present
+	let baseUrl = credentials.domain as string;
+	baseUrl = baseUrl.replace(/\/graphql\/?$/, '').replace(/\/metadata\/?$/, '').replace(/\/$/, '');
+
+	const options = {
+		method,
+		baseURL: baseUrl,
+		url: `/rest${path}`,
+		json: true,
+		...(body && { body }),
+	};
+
+	try {
+		// Use the built-in helper which handles authentication automatically
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'twentyApi',
+			options,
+		);
+
+		return response;
+	} catch (error) {
+		// Handle REST API errors
+		if (error.statusCode) {
+			switch (error.statusCode) {
+				case 400:
+					throw new Error(`Bad Request: ${error.message || 'Invalid request parameters'}`);
+				case 401:
+					throw new Error('Authentication failed. Check your API key in Twenty CRM credentials.');
+				case 403:
+					throw new Error('Permission denied. Check your Twenty CRM user permissions.');
+				case 404:
+					throw new Error(`Record not found. ${error.message || ''}`);
+				case 500:
+					throw new Error(`Server error: ${error.message || 'Internal server error'}`);
+				default:
+					throw new Error(`HTTP ${error.statusCode}: ${error.message}`);
+			}
+		}
+
+		// Handle connection errors
+		if (error.message) {
+			if (error.message.includes('ECONNREFUSED') || error.message.includes('ENOTFOUND')) {
+				throw new Error('Connection failed. Check your Twenty CRM domain.');
+			}
+
+			if (error.message.includes('ETIMEDOUT')) {
+				throw new Error('Request timed out. Check your network connection.');
+			}
+		}
+
+		// Generic error fallback
+		throw new NodeApiError(this.getNode(), error);
+	}
+}
+
+/**
  * Fetches the complete schema metadata from Twenty CRM.
  * Queries the /metadata endpoint to get all objects and their fields.
  *
@@ -968,3 +1042,13 @@ export function buildListQuery(
 
 	return { query, variables };
 }
+
+/**
+ * Re-export new operation builders from the operations module.
+ * These use GraphQL introspection to discover ALL fields including complex types.
+ * 
+ * MIGRATION NOTE: The new operation builders are async and return comprehensive data.
+ * Import from './operations' for the new implementations.
+ */
+export * from './operations';
+export * from './introspection/fieldIntrospection';

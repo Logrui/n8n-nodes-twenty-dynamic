@@ -12,17 +12,23 @@ import {
     ISchemaMetadata,
     getDataSchemaForObject,
     buildCreateMutation,
-    buildGetQuery,
     buildUpdateMutation,
-    buildDeleteMutation,
-    buildListQuery,
     twentyApiRequest,
+    twentyRestApiRequest,
     queryGraphQLType,
     queryEnumValues,
     IFieldMetadata,
     getCleanFieldLabel,
 } from './TwentyApi.client';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
+import { 
+    executeUpsert,
+    executeCreateMany,
+    executeGetMany,
+    executeUpdateMany,
+    executeDeleteMany,
+    executeUpsertMany,
+} from './operations';
 
 export class Twenty implements INodeType {
     description: INodeTypeDescription = {
@@ -45,15 +51,6 @@ export class Twenty implements INodeType {
             },
         ],
         properties: [
-            // Force Refresh Schema toggle
-            {
-                displayName: 'Force Refresh Schema',
-                name: 'forceRefresh',
-                type: 'boolean',
-                default: false,
-                description:
-                    'Whether to bypass cache and fetch fresh schema from Twenty CRM. Toggle ON to refresh, then toggle back OFF for normal operation.',
-            },
             // Database Group selection
             {
                 displayName: 'Database Group',
@@ -116,16 +113,46 @@ export class Twenty implements INodeType {
                         action: 'Create a record',
                     },
                     {
+                        name: 'Create Many',
+                        value: 'createMany',
+                        description: 'Create multiple new records at once',
+                        action: 'Create many records',
+                    },
+                    {
+                        name: 'Create or Update',
+                        value: 'upsert',
+                        description: 'Create a new record, or update the current one if it already exists (upsert)',
+                        action: 'Create or update a record',
+                    },
+                    {
+                        name: 'Create or Update Many',
+                        value: 'upsertMany',
+                        description: 'Create or update multiple records at once',
+                        action: 'Create or update many records',
+                    },
+                    {
                         name: 'Delete',
                         value: 'delete',
                         description: 'Delete a record by ID',
                         action: 'Delete a record',
                     },
                     {
+                        name: 'Delete Many',
+                        value: 'deleteMany',
+                        description: 'Delete multiple records by IDs',
+                        action: 'Delete many records',
+                    },
+                    {
                         name: 'Get',
                         value: 'get',
                         description: 'Retrieve a single record by ID',
                         action: 'Get a record',
+                    },
+                    {
+                        name: 'Get Many',
+                        value: 'getMany',
+                        description: 'Retrieve multiple records by IDs',
+                        action: 'Get many records',
                     },
                     {
                         name: 'List/Search',
@@ -138,6 +165,12 @@ export class Twenty implements INodeType {
                         value: 'update',
                         description: 'Update an existing record',
                         action: 'Update a record',
+                    },
+                    {
+                        name: 'Update Many',
+                        value: 'updateMany',
+                        description: 'Update multiple records at once',
+                        action: 'Update many records',
                     },
                 ],
                 default: 'create',
@@ -203,20 +236,281 @@ export class Twenty implements INodeType {
                 ],
                 description: 'The record to retrieve from the selected database',
             },
-            // Record ID field (for Update, Delete operations)
+            // Record ID field (for Delete operation) - now uses resourceLocator like Get
             {
-                displayName: 'Record ID',
-                name: 'recordId',
-                type: 'string',
+                displayName: 'Record',
+                name: 'recordIdDelete',
+                type: 'resourceLocator',
+                default: { mode: 'list', value: '' },
+                required: true,
                 displayOptions: {
                     show: {
-                        operation: ['update', 'delete'],
+                        operation: ['delete'],
+                    },
+                },
+                description: 'The record to delete from the selected database. ⚠️ Delete operations are permanent and cannot be undone.',
+                modes: [
+                    {
+                        displayName: 'From List',
+                        name: 'list',
+                        type: 'list',
+                        hint: 'Select a record from the dropdown list',
+                        typeOptions: {
+                            searchListMethod: 'getRecordsForDatabase',
+                            searchable: true,
+                            searchFilterRequired: false,
+                        },
+                    },
+                    {
+                        displayName: 'By URL',
+                        name: 'url',
+                        type: 'string',
+                        hint: 'Paste the record URL from Twenty CRM',
+                        placeholder: 'https://app.twenty.com/objects/people/123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: 'https?://.*?/objects/[^/]+/[a-f0-9-]{36}',
+                                    errorMessage: 'Not a valid Twenty CRM record URL',
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        displayName: 'By ID',
+                        name: 'id',
+                        type: 'string',
+                        hint: 'Enter the record UUID directly',
+                        placeholder: '123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: '^[a-f0-9-]{36}$',
+                                    errorMessage: 'Not a valid UUID',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+            // Record ID field (for Update operation) - now uses resourceLocator like Get and Delete
+            {
+                displayName: 'Record',
+                name: 'recordIdUpdate',
+                type: 'resourceLocator',
+                default: { mode: 'list', value: '' },
+                required: true,
+                displayOptions: {
+                    show: {
+                        operation: ['update'],
+                    },
+                },
+                description: 'The record to update in the selected database',
+                modes: [
+                    {
+                        displayName: 'From List',
+                        name: 'list',
+                        type: 'list',
+                        hint: 'Select a record from the dropdown list',
+                        typeOptions: {
+                            searchListMethod: 'getRecordsForDatabase',
+                            searchable: true,
+                            searchFilterRequired: false,
+                        },
+                    },
+                    {
+                        displayName: 'By URL',
+                        name: 'url',
+                        type: 'string',
+                        hint: 'Paste the record URL from Twenty CRM',
+                        placeholder: 'https://app.twenty.com/objects/people/123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: 'https?://.*?/objects/[^/]+/[a-f0-9-]{36}',
+                                    errorMessage: 'Not a valid Twenty CRM record URL',
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        displayName: 'By ID',
+                        name: 'id',
+                        type: 'string',
+                        hint: 'Enter the record UUID directly',
+                        placeholder: '123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: '^[a-f0-9-]{36}$',
+                                    errorMessage: 'Not a valid UUID',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+            // Upsert Mode - How to match existing records
+            {
+                displayName: 'Match By',
+                name: 'upsertMode',
+                type: 'options',
+                displayOptions: {
+                    show: {
+                        operation: ['upsert'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'Record ID',
+                        value: 'id',
+                        description: 'Match by record UUID (if you already know the ID)',
+                    },
+                    {
+                        name: 'Unique Field',
+                        value: 'field',
+                        description: 'Match by a unique field (e.g., email for people, domain for companies)',
+                    },
+                ],
+                default: 'field',
+                description: 'How to determine if a record already exists',
+            },
+            // Record ID field (for Upsert operation when matching by ID)
+            {
+                displayName: 'Record',
+                name: 'recordIdUpsert',
+                type: 'resourceLocator',
+                default: { mode: 'list', value: '' },
+                required: true,
+                displayOptions: {
+                    show: {
+                        operation: ['upsert'],
+                        upsertMode: ['id'],
+                    },
+                },
+                description: 'The record to update if it exists. If not found, a new record will be created with the provided fields.',
+                modes: [
+                    {
+                        displayName: 'From List',
+                        name: 'list',
+                        type: 'list',
+                        hint: 'Select a record from the dropdown list',
+                        typeOptions: {
+                            searchListMethod: 'getRecordsForDatabase',
+                            searchable: true,
+                            searchFilterRequired: false,
+                        },
+                    },
+                    {
+                        displayName: 'By URL',
+                        name: 'url',
+                        type: 'string',
+                        hint: 'Paste the record URL from Twenty CRM',
+                        placeholder: 'https://app.twenty.com/objects/people/123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: 'https?://.*?/objects/[^/]+/[a-f0-9-]{36}',
+                                    errorMessage: 'Not a valid Twenty CRM record URL',
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        displayName: 'By ID',
+                        name: 'id',
+                        type: 'string',
+                        hint: 'Enter the record UUID directly',
+                        placeholder: '123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: '^[a-f0-9-]{36}$',
+                                    errorMessage: 'Not a valid UUID',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+            // Match field for upsert (when matching by unique field)
+            {
+                displayName: 'Match Field Name or ID',
+                name: 'upsertMatchField',
+                type: 'options',
+                typeOptions: {
+                    loadOptionsMethod: 'getFieldsForResource',
+                },
+                displayOptions: {
+                    show: {
+                        operation: ['upsert'],
+                        upsertMode: ['field'],
                     },
                 },
                 default: '',
                 required: true,
-                description: 'The UUID of the record to update or delete. ⚠️ Delete operations are permanent and cannot be undone.',
-                placeholder: 'e.g., 123e4567-e89b-12d3-a456-426614174000',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                placeholder: 'Select a unique field (e.g., email)',
+            },
+            // Match value for upsert (when matching by unique field)
+            {
+                displayName: 'Match Value',
+                name: 'upsertMatchValue',
+                type: 'string',
+                displayOptions: {
+                    show: {
+                        operation: ['upsert'],
+                        upsertMode: ['field'],
+                    },
+                },
+                default: '',
+                required: true,
+                description: 'The value to search for in the match field',
+                placeholder: 'e.g., john@example.com',
+            },
+            // ========================================
+            // BULK OPERATIONS PARAMETERS
+            // ========================================
+            // Bulk data input (for all bulk operations)
+            {
+                displayName: 'Input Data',
+                name: 'bulkData',
+                type: 'json',
+                displayOptions: {
+                    show: {
+                        operation: ['createMany', 'getMany', 'updateMany', 'deleteMany', 'upsertMany'],
+                    },
+                },
+                default: '[]',
+                required: true,
+                description: 'Array of data for bulk operation. Format varies by operation - see documentation.',
+                placeholder: '[{"field1": "value1"}, {"field1": "value2"}]',
+                hint: 'Provide array of objects. For Create Many: array of field objects. For Get/Delete Many: array of IDs. For Update/Upsert Many: array of objects with id/matchValue and fields.',
+            },
+            // Match field for upsert many (when matching by unique field)
+            {
+                displayName: 'Match Field Name or ID',
+                name: 'upsertManyMatchField',
+                type: 'options',
+                typeOptions: {
+                    loadOptionsMethod: 'getFieldsForResource',
+                },
+                displayOptions: {
+                    show: {
+                        operation: ['upsertMany'],
+                    },
+                },
+                default: '',
+                required: true,
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                placeholder: 'Select a unique field (e.g., email)',
+                hint: 'The unique field to match records on. Each item in Input Data should have a matchValue for this field.',
             },
             // Fields collection (for Create and Update operations)
             {
@@ -228,7 +522,7 @@ export class Twenty implements INodeType {
                 },
                 displayOptions: {
                     show: {
-                        operation: ['create', 'update'],
+                        operation: ['create', 'update', 'upsert'],
                     },
                 },
                 default: {},
@@ -606,14 +900,6 @@ export class Twenty implements INodeType {
              */
             async getResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
-                    // Get forceRefresh parameter
-                    let forceRefresh = false;
-                    try {
-                        forceRefresh = this.getNodeParameter('forceRefresh', 0) as boolean;
-                    } catch {
-                        // Parameter doesn't exist or not set, default to false
-                    }
-
                     // Get resourceGroup parameter (Database Group)
                     let resourceGroup = 'all';
                     try {
@@ -623,8 +909,9 @@ export class Twenty implements INodeType {
                         resourceGroup = 'all';
                     }
 
-                    // Get schema with caching
-                    const schema: ISchemaMetadata = await getCachedSchema.call(this, forceRefresh);
+                    // Get schema - use cache for editor UI performance
+                    // Fresh execution will always fetch fresh schema anyway
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
 
                     // Filter objects based on database group
                     let filteredObjects = schema.objects;
@@ -699,9 +986,6 @@ export class Twenty implements INodeType {
                         return [];
                     }
 
-                    // Get force refresh flag
-                    const forceRefresh = this.getCurrentNodeParameter('forceRefresh') as boolean || false;
-
                     // Get operation to determine which fields to show
                     let operation = '';
                     try {
@@ -711,7 +995,8 @@ export class Twenty implements INodeType {
                     }
 
                     // SOURCE 1: Metadata API (custom SELECT fields with rich options)
-                    const schema = await getCachedSchema.call(this, forceRefresh);
+                    // Use cache for editor UI performance
+                    const schema = await getCachedSchema.call(this, false);
                     const objectMeta = schema.objects.find((obj) => obj.nameSingular === resource);
                     const metadataFields: IFieldMetadata[] = objectMeta?.fields || [];
 
@@ -877,8 +1162,8 @@ export class Twenty implements INodeType {
                     }
 
                     // STRATEGY 1: Try Metadata API first (custom SELECT fields with colors)
-                    const forceRefresh = this.getCurrentNodeParameter('forceRefresh') as boolean || false;
-                    const schema = await getCachedSchema.call(this, forceRefresh);
+                    // Use cache for editor UI performance
+                    const schema = await getCachedSchema.call(this, false);
                     const objectMeta = schema.objects.find((obj) => obj.nameSingular === resource);
                     
                     if (objectMeta?.fields) {
@@ -961,7 +1246,8 @@ export class Twenty implements INodeType {
                     }
                     
                     // Get schema to find the object metadata
-                    const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
+                    // Always fetch fresh schema on execution for accuracy
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, true);
                     const objectMetadata = schema.objects.find((obj) => obj.nameSingular === resource);
 
                     if (!objectMetadata) {
@@ -970,7 +1256,16 @@ export class Twenty implements INodeType {
 
                     // Always query common display fields regardless of schema
                     // The schema metadata from /metadata endpoint is often incomplete
-                    const fieldsToQuery = ['id', 'name']; // Always include id and name at minimum
+                    // Special handling for Person: name is a FullName complex type (firstName, lastName)
+                    const isPerson = resource === 'person';
+                    const nameFieldQuery = isPerson 
+                        ? `name {
+                            firstName
+                            lastName
+                        }`
+                        : 'name';
+                    
+                    const fieldsToQuery = ['id', nameFieldQuery]; // Always include id and name at minimum
 
                     // Build GraphQL query to list records (limit to 100 for dropdown performance)
                     // Use plural name (e.g., 'companies') with first argument, not paging
@@ -978,10 +1273,19 @@ export class Twenty implements INodeType {
                     
                     // Build filter clause if user has typed a search term
                     // Use ilike for case-insensitive partial matching
+                    // For Person database, search in both firstName and lastName
                     const hasFilter = filter && filter.trim() !== '';
-                    const filterClause = hasFilter
-                        ? ', filter: { name: { ilike: $searchPattern } }'
-                        : '';
+                    let filterClause = '';
+                    
+                    if (hasFilter) {
+                        if (isPerson) {
+                            // Search in firstName OR lastName for Person database
+                            filterClause = ', filter: { or: [ { name: { firstName: { ilike: $searchPattern } } }, { name: { lastName: { ilike: $searchPattern } } } ] }';
+                        } else {
+                            // Standard search in name field for other databases
+                            filterClause = ', filter: { name: { ilike: $searchPattern } }';
+                        }
+                    }
                     
                     const query = `
                         query List${objectMetadata.labelPlural.replace(/\s+/g, '')}($limit: Int!${hasFilter ? ', $searchPattern: String!' : ''}) {
@@ -1023,8 +1327,18 @@ export class Twenty implements INodeType {
                     // Transform to list search results
                     const results = edges.map((edge: any) => {
                         const record = edge.node;
-                        // Use name field if available, fallback to id
-                        const displayValue = record.name || record.id;
+                        
+                        // Handle different name field types
+                        let displayValue: string;
+                        if (isPerson && record.name && typeof record.name === 'object') {
+                            // For Person: name is { firstName, lastName }
+                            const firstName = record.name.firstName || '';
+                            const lastName = record.name.lastName || '';
+                            displayValue = `${firstName} ${lastName}`.trim() || record.id;
+                        } else {
+                            // For other databases: name is a simple string
+                            displayValue = record.name || record.id;
+                        }
                         
                         return {
                             name: displayValue,
@@ -1051,7 +1365,8 @@ export class Twenty implements INodeType {
         const resource = this.getNodeParameter('resource', 0) as string;
 
         // Get schema for field information
-        const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
+        // Always fetch fresh schema on execution for accuracy
+        const schema: ISchemaMetadata = await getCachedSchema.call(this, true);
         const objectMetadata = schema.objects.find((obj) => obj.nameSingular === resource);
 
         if (!objectMetadata) {
@@ -1070,8 +1385,9 @@ export class Twenty implements INodeType {
                     // Pass resource to handle resource-specific transformations (e.g., Person.name is FullName, Company.name is String)
                     const fieldsData = transformFieldsData(fieldsParam.field || [], resource);
 
-                    // Build and execute create mutation
-                    const { query, variables } = buildCreateMutation(
+                    // Build and execute create mutation (using introspection for comprehensive field discovery)
+                    const { query, variables } = await buildCreateMutation.call(
+                        this,
                         resource,
                         fieldsData,
                         objectMetadata,
@@ -1090,6 +1406,34 @@ export class Twenty implements INodeType {
                     returnData.push({
                         json: createdRecord,
                         pairedItem: { item: i },
+                    });
+                } else if (operation === 'createMany') {
+                    // Bulk create operation
+                    const bulkDataParam = this.getNodeParameter('bulkData', i) as string;
+                    const recordsData = JSON.parse(bulkDataParam);
+
+                    if (!Array.isArray(recordsData)) {
+                        throw new NodeOperationError(this.getNode(), 'Input Data must be an array of objects');
+                    }
+
+                    // Transform each record's fields
+                    const transformedRecords = recordsData.map(record => transformFieldsData(
+                        Object.entries(record).map(([key, value]) => ({
+                            fieldName: key,
+                            fieldValue: value,
+                        })),
+                        resource,
+                    ));
+
+                    // Execute bulk create
+                    const results = await executeCreateMany(this, resource, transformedRecords, objectMetadata);
+
+                    // Add all results to return data
+                    results.forEach((result) => {
+                        returnData.push({
+                            json: result.success ? result.record : { error: result.error, index: result.index },
+                            pairedItem: { item: i },
+                        });
                     });
                 } else if (operation === 'get') {
                     // Get recordId from resourceLocator parameter
@@ -1123,32 +1467,87 @@ export class Twenty implements INodeType {
                         );
                     }
 
-                    // Build and execute get query
-                    const { query, variables } = buildGetQuery(resource, recordId, objectMetadata);
-                    const response: any = await twentyApiRequest.call(
-                        this,
-                        'graphql',
-                        query,
-                        variables,
-                    );
-
-                    // Extract record from GraphQL edges/node structure
-                    // Note: Response uses plural name (e.g., 'companies') not singular
+                    // Use REST API for Get operation - simpler, faster, and handles all complex types automatically
+                    // GraphQL still used for database/field selection, but REST for actual data retrieval
                     const pluralName = objectMetadata.namePlural;
-                    const edges = response[pluralName]?.edges || [];
-                    if (edges.length === 0) {
-                        throw new NodeOperationError(this.getNode(), `Record with ID "${recordId}" not found`);
+                    const restPath = `/${pluralName}/${recordId}`;
+                    
+                    try {
+                        const response: any = await twentyRestApiRequest.call(
+                            this,
+                            'GET',
+                            restPath,
+                        );
+
+                        // REST API returns data in format: { data: { [resourceSingular]: { ...fields } } }
+                        const record = response.data?.[resource];
+                        
+                        if (!record) {
+                            throw new NodeOperationError(this.getNode(), `Record with ID "${recordId}" not found`);
+                        }
+
+                        returnData.push({
+                            json: record,
+                            pairedItem: { item: i },
+                        });
+                    } catch (error) {
+                        // If REST API fails, provide helpful error message
+                        if (error.message.includes('Record not found')) {
+                            throw new NodeOperationError(this.getNode(), `Record with ID "${recordId}" not found`);
+                        }
+                        throw error;
+                    }
+                } else if (operation === 'getMany') {
+                    // Bulk get operation
+                    const bulkDataParam = this.getNodeParameter('bulkData', i) as string;
+                    const recordIds = JSON.parse(bulkDataParam);
+
+                    if (!Array.isArray(recordIds)) {
+                        throw new NodeOperationError(this.getNode(), 'Input Data must be an array of record IDs');
                     }
 
-                    const record = edges[0].node;
+                    // Execute bulk get
+                    const results = await executeGetMany(this, resource, recordIds, objectMetadata);
 
-                    returnData.push({
-                        json: record,
-                        pairedItem: { item: i },
+                    // Add all results to return data
+                    results.forEach((result) => {
+                        returnData.push({
+                            json: result.success ? result.record : { error: result.error, id: result.id, index: result.index },
+                            pairedItem: { item: i },
+                        });
                     });
                 } else if (operation === 'update') {
-                    // Get recordId and fields from node parameters
-                    const recordId = this.getNodeParameter('recordId', i) as string;
+                    // Get recordId from resourceLocator parameter (same pattern as Get and Delete operations)
+                    const recordIdParam = this.getNodeParameter('recordIdUpdate', i) as string | { mode: string; value: string };
+                    
+                    let recordId: string;
+                    
+                    // Handle both old string format (backward compatibility) and new resourceLocator format
+                    if (typeof recordIdParam === 'string') {
+                        recordId = recordIdParam;
+                    } else if (recordIdParam && typeof recordIdParam === 'object' && recordIdParam.value) {
+                        // ResourceLocator format
+                        if (recordIdParam.mode === 'url') {
+                            // Extract ID from URL using regex
+                            const urlMatch = recordIdParam.value.match(/https?:\/\/.*?\/objects\/[^\/]+\/([a-f0-9-]{36})/i);
+                            if (!urlMatch) {
+                                throw new NodeOperationError(
+                                    this.getNode(),
+                                    `Could not extract record ID from URL: ${recordIdParam.value}`,
+                                );
+                            }
+                            recordId = urlMatch[1];
+                        } else {
+                            // For 'list' and 'id' modes, value is already the ID
+                            recordId = recordIdParam.value;
+                        }
+                    } else {
+                        throw new NodeOperationError(
+                            this.getNode(),
+                            'No record ID provided',
+                        );
+                    }
+
                     const fieldsParam = this.getNodeParameter('fields', i, {}) as {
                         field?: IFieldData[];
                     };
@@ -1157,8 +1556,9 @@ export class Twenty implements INodeType {
                     // Pass resource to handle resource-specific transformations (e.g., Person.name is FullName, Company.name is String)
                     const fieldsData = transformFieldsData(fieldsParam.field || [], resource);
 
-                    // Build and execute update mutation
-                    const { query, variables } = buildUpdateMutation(
+                    // Build and execute update mutation (using introspection for comprehensive field discovery)
+                    const { query, variables } = await buildUpdateMutation.call(
+                        this,
                         resource,
                         recordId,
                         fieldsData,
@@ -1179,58 +1579,263 @@ export class Twenty implements INodeType {
                         json: updatedRecord,
                         pairedItem: { item: i },
                     });
-                } else if (operation === 'delete') {
-                    // Get recordId from node parameters
-                    const recordId = this.getNodeParameter('recordId', i) as string;
+                } else if (operation === 'updateMany') {
+                    // Bulk update operation
+                    const bulkDataParam = this.getNodeParameter('bulkData', i) as string;
+                    const updatesData = JSON.parse(bulkDataParam);
 
-                    // Build and execute delete mutation
-                    const { query, variables } = buildDeleteMutation(
-                        resource,
-                        recordId,
-                        objectMetadata,
-                    );
-                    const response: any = await twentyApiRequest.call(
+                    if (!Array.isArray(updatesData)) {
+                        throw new NodeOperationError(this.getNode(), 'Input Data must be an array of objects with id and fields');
+                    }
+
+                    // Transform each update's fields
+                    const transformedUpdates = updatesData.map(update => ({
+                        id: update.id,
+                        fieldsData: transformFieldsData(
+                            Object.entries(update.fields || {}).map(([key, value]) => ({
+                                fieldName: key,
+                                fieldValue: value,
+                            })),
+                            resource,
+                        ),
+                    }));
+
+                    // Execute bulk update
+                    const results = await executeUpdateMany(this, resource, transformedUpdates, objectMetadata);
+
+                    // Add all results to return data
+                    results.forEach((result) => {
+                        returnData.push({
+                            json: result.success ? result.record : { error: result.error, id: result.id, index: result.index },
+                            pairedItem: { item: i },
+                        });
+                    });
+                } else if (operation === 'upsert') {
+                    // Get upsert mode (match by ID or by unique field)
+                    const upsertMode = this.getNodeParameter('upsertMode', i, 'field') as string;
+                    
+                    const fieldsParam = this.getNodeParameter('fields', i, {}) as {
+                        field?: IFieldData[];
+                    };
+
+                    // Transform fields array to data object using modular transformation
+                    const fieldsData = transformFieldsData(fieldsParam.field || [], resource);
+
+                    // Prepare options based on upsert mode
+                    const options: any = {};
+                    
+                    if (upsertMode === 'id') {
+                        options.recordIdParam = this.getNodeParameter('recordIdUpsert', i);
+                    } else {
+                        const matchFieldParam = this.getNodeParameter('upsertMatchField', i) as string;
+                        const matchValue = this.getNodeParameter('upsertMatchValue', i) as string;
+                        // Extract field name from pipe-separated value (fieldName|fieldType)
+                        options.matchField = matchFieldParam.split('|')[0];
+                        options.matchValue = matchValue;
+                    }
+
+                    // Execute upsert using modularized operation
+                    const { record, action } = await executeUpsert(
                         this,
-                        'graphql',
-                        query,
-                        variables,
+                        upsertMode,
+                        resource,
+                        fieldsData,
+                        objectMetadata,
+                        options,
                     );
-
-                    // Extract deleted record ID from response
-                    const operationName = `delete${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
-                    const deletedRecord = response[operationName];
 
                     returnData.push({
-                        json: { success: true, id: deletedRecord.id },
+                        json: { ...record, __upsertAction: action },
                         pairedItem: { item: i },
+                    });
+                } else if (operation === 'upsertMany') {
+                    // Bulk upsert operation
+                    const bulkDataParam = this.getNodeParameter('bulkData', i) as string;
+                    const upsertData = JSON.parse(bulkDataParam);
+
+                    if (!Array.isArray(upsertData)) {
+                        throw new NodeOperationError(this.getNode(), 'Input Data must be an array of objects with matchValue and fields');
+                    }
+
+                    const matchFieldParam = this.getNodeParameter('upsertManyMatchField', i) as string;
+                    const matchField = matchFieldParam.split('|')[0];
+
+                    // Transform each upsert's fields
+                    const transformedUpserts = upsertData.map(item => ({
+                        matchValue: item.matchValue,
+                        fieldsData: transformFieldsData(
+                            Object.entries(item.fields || {}).map(([key, value]) => ({
+                                fieldName: key,
+                                fieldValue: value,
+                            })),
+                            resource,
+                        ),
+                    }));
+
+                    // Execute bulk upsert
+                    const results = await executeUpsertMany(
+                        this,
+                        resource,
+                        'field',
+                        transformedUpserts,
+                        objectMetadata,
+                        { matchField },
+                    );
+
+                    // Add all results to return data
+                    results.forEach((result) => {
+                        returnData.push({
+                            json: result.success 
+                                ? { ...result.record, __upsertAction: result.action }
+                                : { error: result.error, index: result.index },
+                            pairedItem: { item: i },
+                        });
+                    });
+                } else if (operation === 'delete') {
+                    // Get recordId from resourceLocator parameter (same pattern as Get operation)
+                    const recordIdParam = this.getNodeParameter('recordIdDelete', i) as string | { mode: string; value: string };
+                    
+                    let recordId: string;
+                    
+                    // Handle both old string format (backward compatibility) and new resourceLocator format
+                    if (typeof recordIdParam === 'string') {
+                        recordId = recordIdParam;
+                    } else if (recordIdParam && typeof recordIdParam === 'object' && recordIdParam.value) {
+                        // ResourceLocator format
+                        if (recordIdParam.mode === 'url') {
+                            // Extract ID from URL using regex
+                            const urlMatch = recordIdParam.value.match(/https?:\/\/.*?\/objects\/[^\/]+\/([a-f0-9-]{36})/i);
+                            if (!urlMatch) {
+                                throw new NodeOperationError(
+                                    this.getNode(),
+                                    `Could not extract record ID from URL: ${recordIdParam.value}`,
+                                );
+                            }
+                            recordId = urlMatch[1];
+                        } else {
+                            // For 'list' and 'id' modes, value is already the ID
+                            recordId = recordIdParam.value;
+                        }
+                    } else {
+                        throw new NodeOperationError(
+                            this.getNode(),
+                            'No record ID provided',
+                        );
+                    }
+
+                    // Use REST API for Delete operation - simple, semantic HTTP verb
+                    const pluralName = objectMetadata.namePlural;
+                    const restPath = `/${pluralName}/${recordId}`;
+                    
+                    try {
+                        const response: any = await twentyRestApiRequest.call(
+                            this,
+                            'DELETE',
+                            restPath,
+                        );
+
+                        // REST API DELETE can return different formats:
+                        // - { data: { [resourceSingular]: { id: "..." } } }
+                        // - { data: { id: "..." } }
+                        // - Just the deleted object itself
+                        let deletedRecord;
+                        
+                        if (response.data) {
+                            // Check if it's nested under resource name
+                            deletedRecord = response.data[resource] || response.data[objectMetadata.nameSingular] || response.data;
+                        } else {
+                            // Response might be the record itself
+                            deletedRecord = response;
+                        }
+                        
+                        // If we got a valid response, consider it successful
+                        // DELETE operations often return the deleted record or just { id: "..." }
+                        const resultId = deletedRecord?.id || recordId;
+
+                        returnData.push({
+                            json: { success: true, id: resultId, deletedRecord },
+                            pairedItem: { item: i },
+                        });
+                    } catch (error) {
+                        // If REST API fails, provide helpful error message
+                        if (error.message && error.message.includes('Record not found')) {
+                            throw new NodeOperationError(this.getNode(), `Record with ID "${recordId}" not found`);
+                        }
+                        throw new NodeOperationError(
+                            this.getNode(),
+                            `Failed to delete record with ID "${recordId}": ${error.message || error}`,
+                        );
+                    }
+                } else if (operation === 'deleteMany') {
+                    // Bulk delete operation
+                    const bulkDataParam = this.getNodeParameter('bulkData', i) as string;
+                    const recordIds = JSON.parse(bulkDataParam);
+
+                    if (!Array.isArray(recordIds)) {
+                        throw new NodeOperationError(this.getNode(), 'Input Data must be an array of record IDs');
+                    }
+
+                    // Execute bulk delete
+                    const results = await executeDeleteMany(this, resource, recordIds, objectMetadata);
+
+                    // Add all results to return data
+                    results.forEach((result) => {
+                        returnData.push({
+                            json: result.success 
+                                ? { success: true, id: result.id }
+                                : { error: result.error, id: result.id, index: result.index },
+                            pairedItem: { item: i },
+                        });
                     });
                 } else if (operation === 'findMany') {
                     // Get limit from node parameters
                     const limit = this.getNodeParameter('limit', i) as number;
 
-                    // Build and execute list query
-                    const { query, variables } = buildListQuery(
-                        resource,
-                        limit,
-                        objectMetadata,
-                    );
-                    const response: any = await twentyApiRequest.call(
-                        this,
-                        'graphql',
-                        query,
-                        variables,
-                    );
-
-                    // Extract records from GraphQL edges/node structure
+                    // Use REST API for List/Search operation - returns all fields automatically
+                    // GraphQL still used for database/field selection, but REST for actual data retrieval
                     const pluralName = objectMetadata.namePlural;
-                    const edges = response[pluralName]?.edges || [];
+                    
+                    // Build query parameters for REST API
+                    // Note: REST API uses query parameters for pagination
+                    const queryParts: string[] = [];
+                    if (limit) {
+                        queryParts.push(`limit=${limit}`);
+                    }
+                    
+                    const restPath = `/${pluralName}${queryParts.length > 0 ? '?' + queryParts.join('&') : ''}`;
+                    
+                    try {
+                        const response: any = await twentyRestApiRequest.call(
+                            this,
+                            'GET',
+                            restPath,
+                        );
 
-                    // Transform each record to workflow record
-                    for (const edge of edges) {
-                        returnData.push({
-                            json: edge.node,
-                            pairedItem: { item: i },
-                        });
+                        // REST API returns data in format: { data: { [resourcePlural]: [...records] } }
+                        const records = response.data?.[pluralName];
+                        
+                        if (!records) {
+                            // No records found - return empty array
+                            continue;
+                        }
+
+                        // Handle both array response and paginated response
+                        const recordsArray = Array.isArray(records) ? records : records.edges?.map((edge: any) => edge.node) || [];
+
+                        // Transform each record to workflow record
+                        for (const record of recordsArray) {
+                            returnData.push({
+                                json: record,
+                                pairedItem: { item: i },
+                            });
+                        }
+                    } catch (error) {
+                        // If REST API fails, provide helpful error message
+                        if (error.message.includes('not found')) {
+                            // Empty result - continue
+                            continue;
+                        }
+                        throw error;
                     }
                 }
             } catch (error) {
