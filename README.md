@@ -33,19 +33,19 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 
 ## About This Project
 
-Unlike traditional n8n nodes with static operations, this node **dynamically discovers** the Twenty CRM schema at runtime. It queries the Twenty metadata API to automatically adapt to:
-- All standard Twenty objects (Company, Person, Opportunity, etc.)
-- Custom objects you've created in your Twenty instance  
+Modelled after the official Notion N8N node. Unlike traditional n8n nodes with static operations, this node **dynamically discovers** the Twenty CRM schema at runtime. It queries the Twenty REST and GraphQL APIs to automatically adapt to:
+- Support all standard and system Twenty objects (Company, Person, Opportunity, etc.)
+- Custom databases and fields created in your Twenty instance  
 - Schema changes and updates without requiring node updates
 
 **Key Architecture:**
 - **Dynamic Schema Discovery**: Queries `/metadata` endpoint to get available resources and fields
-- **Hybrid GraphQL/REST**: GraphQL for mutations, REST API for efficient data retrieval
+- **Hybrid GraphQL/REST**: GraphQL for mutations, REST API for efficient data retrieval and node queries
 - **Runtime Query Construction**: Builds queries dynamically based on user selections
 - **Intelligent Caching**: Fresh schema on execution, cached in editor UI for performance
 - **Native n8n Integration**: Uses `this.helpers.httpRequestWithAuthentication` for all API calls
 
-[Twenty CRM](https://twenty.com/) is an open-source CRM under rapid development. This node stays compatible through dynamic adaptation rather than static operation definitions.  
+[Twenty CRM](https://twenty.com/) is an open-source CRM under rapid development. This node stays compatible through dynamic adaptation rather than static operation definitions. 
 ---
 
 ## Installation
@@ -169,9 +169,9 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ---
 
-## Development Status
+## Development Status: Ready to Use ✅
 
-### Production-Ready Features ✅
+### Production-Ready Features 
 
 - ✅ **Dual-source architecture**: Metadata API + GraphQL introspection
 - ✅ **Complete field coverage**: Custom SELECTs + built-in enums
@@ -184,13 +184,9 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 - ✅ **Zero external dependencies**: Native n8n helpers only
 
 ### Roadmap ⏳
-
 - ⏳ Advanced filter UI improvements
-- ⏳ Support for remaining Twenty complex field types (Rating, etc.)
-
-- ⏳ Schema versioning and change detection  
-- ⏳ Support for Twenty "Views"
-- ⏳ Webhook triggers
+- ⏳ Add support for remaining Twenty complex field types (Rating, etc.)
+- ⏳ Support for Twenty "Views" and "Relations"
 
 ---
 ---
@@ -207,8 +203,9 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 ---
 
 
-## For Developers and Collaborators
+## Compatibility
 
+Compatible and tested with Twenty v1.7.6 and n8n Version 1.113.3
 
 
 ## Credits
