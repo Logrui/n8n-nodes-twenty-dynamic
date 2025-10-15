@@ -15,13 +15,19 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 
 ## Features
 
-🗄️ **Supports Custom Databases and Fields**: Automatically fetches all standard and custom objects from your Twenty instance  
+🗄️ **Supports Custom Databases and Fields**: Automatically fetches all standard and custom objects from your Twenty instance
+
 🔓 **Access System Databases**: View and edit system databases not normally accessible through the Twenty UI (Company/Person Attachments (attachments), Synced Email Metadata (messages), and more)
-🔄 **Dual-API Architecture**: Utilizes Twenty Metadata API and GraphQL introspection for complete field coverage for standard and custom fields. REST API used for execution of queries
+
 ⚡ **Full CRUD + Bulk Operations**: Create, Read, Update, Delete, Upsert - all with bulk variants  
-🧩 **Complex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
+
+🧩 **Support for Complex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
+
 📋 **SELECT/MULTI_SELECT Fields**: Dynamic dropdowns with real-time option loading  
+
 💾 **Smart Caching**: Automatic schema caching - fresh on execution, cached in editor for speed  
+
+🔄 **Dual-API Architecture**: Utilizes Twenty Metadata API and GraphQL introspection for complete field coverage for standard and custom fields. REST API used for execution of queries
 
 ---
 
@@ -199,6 +205,11 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 - 📦 [npm Package](https://www.npmjs.com/package/n8n-nodes-twenty-dynamic) - Package details
 
 ---
+
+
+## For Developers and Collaborators
+
+
 
 ## Credits
 
