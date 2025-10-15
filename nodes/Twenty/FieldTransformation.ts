@@ -79,7 +79,18 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 			case 'link':
 				// Links fields (URL + Label)
 				const links: any = {};
-				if (field.primaryLinkUrl) links.primaryLinkUrl = field.primaryLinkUrl;
+				if (field.primaryLinkUrl) {
+					// Check if the URL is an unevaluated expression
+					const url = String(field.primaryLinkUrl);
+					if (url.includes('{{') && url.includes('}}')) {
+						throw new Error(
+							`Link URL contains unevaluated expression: "${url}". ` +
+							`Make sure the expression can be resolved from the input data. ` +
+							`Field: ${actualFieldName}`
+						);
+					}
+					links.primaryLinkUrl = field.primaryLinkUrl;
+				}
 				if (field.primaryLinkLabel) links.primaryLinkLabel = field.primaryLinkLabel;
 				if (Object.keys(links).length > 0) {
 					result[actualFieldName] = links;

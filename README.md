@@ -169,7 +169,7 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ---
 
-## Development Status: Ready to Use ✅
+## Development Status: Ready to Use for Majority of Operations✅
 
 ### Production-Ready Features 
 
@@ -187,6 +187,8 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 - ⏳ Advanced filter UI improvements
 - ⏳ Add support for remaining Twenty complex field types (Rating, etc.)
 - ⏳ Support for Twenty "Views" and "Relations"
+- ⏳ Support for get Database and Notion style resources
+
 
 ---
 ---

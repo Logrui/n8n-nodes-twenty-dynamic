@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.32] - 2025-10-15
+
+### 🐛 Bug Fix - Expression Validation for Link Fields
+
+**Added detection for unevaluated n8n expressions in link URLs**
+
+#### Fixed
+- ✅ Added validation to detect when n8n expressions (e.g., `{{ $json['field'] }}`) are not being evaluated in link URL fields
+- ✅ Provides clear error message when expression remains unevaluated: "Link URL contains unevaluated expression"
+- ✅ Helps users identify configuration issues where expressions can't be resolved from input data
+
+#### Technical Details
+- Modified `FieldTransformation.ts` to check for `{{` and `}}` in link URL values before sending to Twenty CRM
+- Prevents Twenty's server-side validation from receiving raw expression strings
+- Error message includes the actual field name for easier debugging
+
+### Breaking Changes
+**None!** Existing functionality unchanged, only adds validation to prevent errors.
+
+---
+
 ## [0.9.3] - 2025-10-15
 
 ### 🐛 Maintenance - ESLint Fixes
