@@ -41,6 +41,11 @@ export interface IObjectMetadata {
 	labelSingular: string;
 	labelPlural: string;
 	isCustom: boolean;
+	isSystem: boolean;
+	isActive: boolean;
+	isRemote?: boolean;
+	isUIReadOnly?: boolean;
+	isSearchable?: boolean;
 	fields: IFieldMetadata[];
 }
 
@@ -160,6 +165,11 @@ export async function getSchemaMetadata(
 						labelSingular
 						labelPlural
 						isCustom
+						isSystem
+						isActive
+						isRemote
+						isUIReadOnly
+						isSearchable
 						fields(paging: { first: 200 }, filter: {}) {
 							edges {
 								node {
@@ -193,6 +203,11 @@ export async function getSchemaMetadata(
 			labelSingular: node.labelSingular,
 			labelPlural: node.labelPlural,
 			isCustom: node.isCustom,
+			isSystem: node.isSystem,
+			isActive: node.isActive,
+			isRemote: node.isRemote,
+			isUIReadOnly: node.isUIReadOnly,
+			isSearchable: node.isSearchable,
 			fields: node.fields.edges.map((fieldEdge: any) => ({
 				id: fieldEdge.node.id,
 				name: fieldEdge.node.name,
@@ -299,6 +314,84 @@ function humanize(str: string): string {
 		.replace(/([A-Z])/g, ' $1') // Add space before capital letters
 		.replace(/^./, (match) => match.toUpperCase()) // Capitalize first letter
 		.trim();
+}
+
+/**
+ * Helper function to extract clean display name from label.
+ * Twenty API often returns verbose labels like:
+ * - "The company name" (when field is "name")
+ * - "Address of the company" (when field is "address")
+ * - "Attachments linked to the company" (when field is "attachments")
+ * 
+ * Strategy: Use humanized field name for consistency and clarity.
+ * Only use the API label if it's concise and matches expected patterns.
+ * 
+ * Examples: 
+ * - fieldName: "name" → "Name"
+ * - fieldName: "domainName" → "Domain Name"
+ * - fieldName: "idealCustomerProfile" → "Ideal Customer Profile"
+ * - fieldName: "deletedAt" → "Deleted At"
+ * - fieldName: "phoneNumber" → "Phone Number"
+ *
+ * @param {string} label The label from the API (often verbose/descriptive)
+ * @param {string} fieldName The field name (camelCase)
+ * @returns {string} The clean display name
+ */
+export function getCleanFieldLabel(label: string | undefined | null, fieldName: string): string {
+	// Always humanize the field name for consistency
+	// This gives us predictable, clean names like "Domain Name", "Phone Number", etc.
+	const humanizedName = humanize(fieldName);
+	
+	// If no label provided, use humanized field name
+	if (!label) {
+		return humanizedName;
+	}
+	
+	// If label is just the field name itself, humanize it
+	if (label.toLowerCase() === fieldName.toLowerCase()) {
+		return humanizedName;
+	}
+	
+	// For timestamp fields (createdAt, updatedAt, deletedAt), always use humanized name
+	// This ensures consistency: "Created At", "Updated At", "Deleted At"
+	if (fieldName.endsWith('At') || fieldName.endsWith('Date') || fieldName.endsWith('Time')) {
+		return humanizedName;
+	}
+	
+	// If label contains ": " (colon separator), extract the title part
+	// Example: "Ideal Customer Profile: Indicates whether..." → "Ideal Customer Profile"
+	if (label.includes(': ')) {
+		const titlePart = label.split(': ')[0].trim();
+		// Only use the title if it's reasonable length (not overly verbose)
+		if (titlePart.length <= 50) {
+			return titlePart;
+		}
+	}
+	
+	// Detect verbose/descriptive patterns and prefer humanized name
+	const verbosePatterns = [
+		' of the ',
+		' linked to ',
+		' for the ',
+		' from the ',
+		'The ',  // Starts with "The " like "The company name"
+		' when ',
+		' that ',
+	];
+	
+	const isVerbose = verbosePatterns.some(pattern => label.includes(pattern));
+	if (isVerbose) {
+		return humanizedName;
+	}
+	
+	// For short, concise labels (under 30 chars), use them as-is
+	// This handles cases like "Id", "Category", "Status" nicely
+	if (label.length <= 30) {
+		return label;
+	}
+	
+	// For anything else that's verbose, use humanized field name
+	return humanizedName;
 }
 
 /**
@@ -518,6 +611,103 @@ export async function queryEnumValues(
 }
 
 /**
+ * Build comprehensive field selections for a Twenty CRM object type using introspection.
+ * This discovers ALL fields including complex types (Links, Address, Currency, etc.) and builds
+ * proper GraphQL field selections with subfield queries.
+ * 
+ * @param {string} objectTypeName The GraphQL type name (e.g., 'Company', 'Person')
+ * @returns {Promise<string>} GraphQL field selections string
+ */
+export async function buildComprehensiveFieldSelections(
+	this: TwentyApiContext,
+	objectTypeName: string,
+): Promise<string> {
+	// Introspect the object type to discover all fields
+	const introspectionQuery = `
+		query IntrospectType {
+			__type(name: "${objectTypeName}") {
+				name
+				fields {
+					name
+					type {
+						name
+						kind
+						ofType {
+							name
+							kind
+							ofType {
+								name
+								kind
+							}
+						}
+					}
+				}
+			}
+		}
+	`;
+
+	const response: any = await twentyApiRequest.call(this, 'graphql', introspectionQuery);
+	
+	if (!response.__type?.fields) {
+		// Fallback to basic fields if introspection fails
+		return 'id\ncreatedAt\nupdatedAt\ndeletedAt\nname';
+	}
+
+	const fields = response.__type.fields;
+	const fieldSelections: string[] = [];
+
+	// Known subfield patterns for complex Twenty CRM types
+	const complexTypeSubfields: Record<string, string> = {
+		'Links': `primaryLinkUrl
+			primaryLinkLabel
+			secondaryLinks`,
+		'Address': `addressStreet1
+			addressStreet2
+			addressCity
+			addressState
+			addressCountry
+			addressPostcode
+			addressLat
+			addressLng`,
+		'Currency': `amountMicros
+			currencyCode`,
+		'Actor': `source
+			workspaceMemberId
+			name`,
+		'WorkspaceMember': `id
+			name {
+				firstName
+				lastName
+			}
+			userEmail`,
+	};
+
+	for (const field of fields) {
+		// Skip __typename meta field and connection fields (they need pagination)
+		if (field.name === '__typename') continue;
+		
+		const fieldType = field.type;
+		const typeName = fieldType.name || fieldType.ofType?.name || fieldType.ofType?.ofType?.name;
+		const typeKind = fieldType.kind || fieldType.ofType?.kind || fieldType.ofType?.ofType?.kind;
+
+		// Skip connection fields (end with 'Connection')
+		if (typeName?.endsWith('Connection')) continue;
+
+		// Handle scalar and enum fields
+		if (typeKind === 'SCALAR' || typeKind === 'ENUM' || 
+			['ID', 'String', 'Int', 'Float', 'Boolean', 'DateTime', 'Date', 'Time', 'UUID'].includes(typeName)) {
+			fieldSelections.push(field.name);
+		}
+		// Handle complex object fields
+		else if (typeKind === 'OBJECT' && complexTypeSubfields[typeName]) {
+			fieldSelections.push(`${field.name} {\n\t\t\t\t${complexTypeSubfields[typeName]}\n\t\t\t}`);
+		}
+	}
+
+	return fieldSelections.join('\n\t\t\t\t');
+}
+
+/**
  * Build a GraphQL mutation for creating a record.
  * Only requests simple scalar fields in the response to avoid complex object subfield requirements.
  * 
@@ -531,20 +721,25 @@ export function buildCreateMutation(
 	fieldsData: Record<string, any>,
 	objectMetadata: IObjectMetadata,
 ): { query: string; variables: Record<string, any> } {
-	// Build field selection for response - only simple scalar fields
-	// Exclude complex types that require subfield selection (Objects, Lists, Connections)
-	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT'];
-	const fieldSelections = objectMetadata.fields
+	// Build field selection using schema metadata + essential core fields
+	// Schema metadata may be incomplete, so we add commonly-used fields manually
+	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
+	
+	// Get fields from schema metadata
+	const metadataFields = objectMetadata.fields
 		.filter((field) => {
-			// Include scalar types
 			if (scalarTypes.includes(field.type)) return true;
-			// Include ID fields
 			if (field.name === 'id' || field.name.endsWith('Id')) return true;
-			// Exclude everything else (Address, Links, Currency, Connection types, etc.)
 			return false;
 		})
-		.map((field) => field.name)
-		.join('\n\t\t\t');
+		.map((field) => field.name);
+	
+	// Add essential fields that should always be requested but might be missing from metadata
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name'];
+	
+	// Combine and deduplicate
+	const allFields = [...new Set([...essentialFields, ...metadataFields])];
+	const fieldSelections = allFields.join('\n\t\t\t');
 
 	// Capitalize the object name for the GraphQL type (e.g., 'company' -> 'Company')
 	const capitalizedObjectName = objectNameSingular.charAt(0).toUpperCase() + objectNameSingular.slice(1);
@@ -580,21 +775,32 @@ export function buildGetQuery(
 	recordId: string,
 	objectMetadata: IObjectMetadata,
 ): { query: string; variables: Record<string, any> } {
-	// Build field selection for response - only simple scalar fields
-	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT'];
-	const fieldSelections = objectMetadata.fields
+	// Build field selection using schema metadata + essential core fields
+	// Schema metadata may be incomplete, so we add commonly-used fields manually
+	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
+	
+	// Get fields from schema metadata
+	const metadataFields = objectMetadata.fields
 		.filter((field) => {
 			if (scalarTypes.includes(field.type)) return true;
 			if (field.name === 'id' || field.name.endsWith('Id')) return true;
 			return false;
 		})
-		.map((field) => field.name)
-		.join('\n\t\t\t');
+		.map((field) => field.name);
+	
+	// Add essential fields that should always be requested but might be missing from metadata
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
+	
+	// Combine and deduplicate
+	const allFields = [...new Set([...essentialFields, ...metadataFields])];
+	const fieldSelections = allFields.join('\n\t\t\t\t');
 
-	// Construct query
+	// Construct query using plural name with filter
+	// Note: Use plural name (e.g., 'companies') not singular (e.g., 'company')
+	const pluralName = objectMetadata.namePlural;
 	const query = `
 		query Get${objectMetadata.labelSingular.replace(/\s+/g, '')}($id: UUID!) {
-			${objectNameSingular}(filter: { id: { eq: $id } }) {
+			${pluralName}(filter: { id: { eq: $id } }) {
 				edges {
 					node {
 						${fieldSelections}
@@ -629,16 +835,25 @@ export function buildUpdateMutation(
 	fieldsData: Record<string, any>,
 	objectMetadata: IObjectMetadata,
 ): { query: string; variables: Record<string, any> } {
-	// Build field selection for response - only simple scalar fields
-	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT'];
-	const fieldSelections = objectMetadata.fields
+	// Build field selection using schema metadata + essential core fields
+	// Schema metadata may be incomplete, so we add commonly-used fields manually
+	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
+	
+	// Get fields from schema metadata
+	const metadataFields = objectMetadata.fields
 		.filter((field) => {
 			if (scalarTypes.includes(field.type)) return true;
 			if (field.name === 'id' || field.name.endsWith('Id')) return true;
 			return false;
 		})
-		.map((field) => field.name)
-		.join('\n\t\t\t');
+		.map((field) => field.name);
+	
+	// Add essential fields that should always be requested but might be missing from metadata
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
+	
+	// Combine and deduplicate
+	const allFields = [...new Set([...essentialFields, ...metadataFields])];
+	const fieldSelections = allFields.join('\n\t\t\t');
 
 	// Capitalize the object name for the GraphQL type
 	const capitalizedObjectName = objectNameSingular.charAt(0).toUpperCase() + objectNameSingular.slice(1);
@@ -709,24 +924,34 @@ export function buildListQuery(
 	limit: number,
 	objectMetadata: IObjectMetadata,
 ): { query: string; variables: Record<string, any> } {
-	// Build field selection for response - only simple scalar fields
-	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT'];
-	const fieldSelections = objectMetadata.fields
+	// Build field selection using schema metadata + essential core fields
+	// Schema metadata may be incomplete, so we add commonly-used fields manually
+	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
+	
+	// Get fields from schema metadata
+	const metadataFields = objectMetadata.fields
 		.filter((field) => {
 			if (scalarTypes.includes(field.type)) return true;
 			if (field.name === 'id' || field.name.endsWith('Id')) return true;
 			return false;
 		})
-		.map((field) => field.name)
-		.join('\n\t\t\t\t');
+		.map((field) => field.name);
+	
+	// Add essential fields that should always be requested but might be missing from metadata
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
+	
+	// Combine and deduplicate
+	const allFields = [...new Set([...essentialFields, ...metadataFields])];
+	const fieldSelections = allFields.join('\n\t\t\t\t');
 
 	// Use namePlural for the query name (e.g., 'companies', 'people')
 	const pluralName = objectMetadata.namePlural;
 
 	// Construct query with edges/node structure
+	// Note: Use 'first' directly, not 'paging: { first: ... }'
 	const query = `
 		query List${objectMetadata.labelPlural.replace(/\s+/g, '')}($limit: Int!) {
-			${pluralName}(paging: { first: $limit }) {
+			${pluralName}(first: $limit) {
 				edges {
 					node {
 						${fieldSelections}

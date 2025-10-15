@@ -20,6 +20,7 @@ import {
     queryGraphQLType,
     queryEnumValues,
     IFieldMetadata,
+    getCleanFieldLabel,
 } from './TwentyApi.client';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
 
@@ -53,18 +54,51 @@ export class Twenty implements INodeType {
                 description:
                     'Whether to bypass cache and fetch fresh schema from Twenty CRM. Toggle ON to refresh, then toggle back OFF for normal operation.',
             },
-            // Resource selection
+            // Database Group selection
             {
-                displayName: 'Object Name or ID',
+                displayName: 'Database Group',
+                name: 'resourceGroup',
+                type: 'options',
+                noDataExpression: true,
+                options: [
+                    {
+                        name: 'All Databases',
+                        value: 'all',
+                        description: 'Show all available databases in your Twenty CRM workspace',
+                    },
+                    {
+                        name: 'Custom Databases',
+                        value: 'custom',
+                        description: 'Your user-created custom databases with your own data models',
+                    },
+                    {
+                        name: 'Standard Databases',
+                        value: 'standard',
+                        description: 'Your core Twenty CRM databases (Company, Person, Opportunity, etc.)',
+                    },
+                    {
+                        name: 'System Databases',
+                        value: 'system',
+                        description: 'Hidden Twenty system databases not normally accessible to users - Advanced use only',
+                    },
+                ],
+                default: 'standard',
+                required: true,
+                description: 'Filter databases by group to narrow down the selection',
+            },
+            // Database selection
+            {
+                displayName: 'Database Name or ID',
                 name: 'resource',
                 type: 'options',
 																noDataExpression: true,
                 typeOptions: {
                     loadOptionsMethod: 'getResources',
+                    loadOptionsDependsOn: ['resourceGroup'],
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify a resource name using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. <strong>Note:</strong> Schema is cached for 10 minutes - new custom objects may take up to 10 minutes to appear unless you toggle Force Refresh Schema. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
             },
             // Operation selection
             {
@@ -72,24 +106,24 @@ export class Twenty implements INodeType {
                 name: 'operation',
                 type: 'options',
                 noDataExpression: true,
-                // Show operation field when any resource is selected
+                // Show operation field when any database is selected
                 // displayOptions: show when resource field has any value
                 options: [
                     {
-                        name: 'Create One',
-                        value: 'createOne',
+                        name: 'Create',
+                        value: 'create',
                         description: 'Create a new record',
                         action: 'Create a record',
                     },
                     {
-                        name: 'Delete One',
-                        value: 'deleteOne',
+                        name: 'Delete',
+                        value: 'delete',
                         description: 'Delete a record by ID',
                         action: 'Delete a record',
                     },
                     {
-                        name: 'Get One',
-                        value: 'findOne',
+                        name: 'Get',
+                        value: 'get',
                         description: 'Retrieve a single record by ID',
                         action: 'Get a record',
                     },
@@ -100,28 +134,88 @@ export class Twenty implements INodeType {
                         action: 'List records',
                     },
                     {
-                        name: 'Update One',
-                        value: 'updateOne',
+                        name: 'Update',
+                        value: 'update',
                         description: 'Update an existing record',
                         action: 'Update a record',
                     },
                 ],
-                default: 'createOne',
+                default: 'create',
                 required: true,
             },
-            // Record ID field (for Get, Update, Delete operations)
+            // Record ID (for Get operation) - using resourceLocator pattern
+            {
+                displayName: 'Record',
+                name: 'recordId',
+                type: 'resourceLocator',
+                default: { mode: 'list', value: '' },
+                required: true,
+                displayOptions: {
+                    show: {
+                        operation: ['get'],
+                    },
+                },
+                modes: [
+                    {
+                        displayName: 'From List',
+                        name: 'list',
+                        type: 'list',
+                        placeholder: 'Select a record...',
+                        typeOptions: {
+                            searchListMethod: 'getRecordsForDatabase',
+                            searchable: true,
+                        },
+                    },
+                    {
+                        displayName: 'By URL',
+                        name: 'url',
+                        type: 'string',
+                        placeholder: 'https://app.twenty.com/objects/companies/123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: 'https?://.*?/objects/[^/]+/([a-f0-9-]{36})',
+                                    errorMessage: 'Not a valid Twenty record URL',
+                                },
+                            },
+                        ],
+                        extractValue: {
+                            type: 'regex',
+                            regex: 'https?://.*?/objects/[^/]+/([a-f0-9-]{36})',
+                        },
+                    },
+                    {
+                        displayName: 'By ID',
+                        name: 'id',
+                        type: 'string',
+                        placeholder: 'e.g., 123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: '^[a-f0-9-]{36}$',
+                                    errorMessage: 'Not a valid UUID',
+                                },
+                            },
+                        ],
+                    },
+                ],
+                description: 'The record to retrieve from the selected database',
+            },
+            // Record ID field (for Update, Delete operations)
             {
                 displayName: 'Record ID',
                 name: 'recordId',
                 type: 'string',
                 displayOptions: {
                     show: {
-                        operation: ['findOne', 'updateOne', 'deleteOne'],
+                        operation: ['update', 'delete'],
                     },
                 },
                 default: '',
                 required: true,
-                description: 'The UUID of the record to retrieve, update, or delete. ?? Delete operations are permanent and cannot be undone.',
+                description: 'The UUID of the record to update or delete. ⚠️ Delete operations are permanent and cannot be undone.',
                 placeholder: 'e.g., 123e4567-e89b-12d3-a456-426614174000',
             },
             // Fields collection (for Create and Update operations)
@@ -134,7 +228,7 @@ export class Twenty implements INodeType {
                 },
                 displayOptions: {
                     show: {
-                        operation: ['createOne', 'updateOne'],
+                        operation: ['create', 'update'],
                     },
                 },
                 default: {},
@@ -507,7 +601,7 @@ export class Twenty implements INodeType {
     methods = {
         loadOptions: {
             /**
-             * Get all available resources (objects) from Twenty CRM schema.
+             * Get all available databases (objects) from Twenty CRM schema.
              * Uses cached schema with 10-minute TTL.
              */
             async getResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
@@ -520,14 +614,56 @@ export class Twenty implements INodeType {
                         // Parameter doesn't exist or not set, default to false
                     }
 
+                    // Get resourceGroup parameter (Database Group)
+                    let resourceGroup = 'all';
+                    try {
+                        resourceGroup = this.getCurrentNodeParameter('resourceGroup') as string;
+                    } catch {
+                        // Parameter doesn't exist or not set, default to 'all'
+                        resourceGroup = 'all';
+                    }
+
                     // Get schema with caching
                     const schema: ISchemaMetadata = await getCachedSchema.call(this, forceRefresh);
 
+                    // Filter objects based on database group
+                    let filteredObjects = schema.objects;
+                    
+                    switch (resourceGroup) {
+                        case 'all':
+                            // Show all databases
+                            filteredObjects = schema.objects;
+                            break;
+                        case 'standard':
+                            // Standard databases: main user-facing Twenty objects
+                            // Explicitly: not custom, not system, and active
+                            filteredObjects = schema.objects.filter(obj => 
+                                obj.isCustom === false && obj.isSystem === false && obj.isActive === true
+                            );
+                            break;
+                        case 'system':
+                            // System databases: internal meta-objects
+                            // Explicitly: system objects, not custom
+                            filteredObjects = schema.objects.filter(obj => 
+                                obj.isSystem === true && obj.isCustom === false
+                            );
+                            break;
+                        case 'custom':
+                            // Custom databases: user-created objects
+                            // Explicitly: custom objects only
+                            filteredObjects = schema.objects.filter(obj => 
+                                obj.isCustom === true
+                            );
+                            break;
+                        default:
+                            filteredObjects = schema.objects;
+                    }
+
                     // Transform objects to dropdown options
-                    const options: INodePropertyOptions[] = schema.objects.map((obj) => ({
+                    const options: INodePropertyOptions[] = filteredObjects.map((obj) => ({
                         name: obj.labelSingular,
                         value: obj.nameSingular,
-                        description: obj.isCustom ? '(Custom Object)' : '(Standard Object)',
+                        description: obj.isCustom ? '(Custom Database)' : '(Standard Database)',
                     }));
 
                     // Sort: standard objects first, then custom objects, alphabetically within each group
@@ -545,19 +681,19 @@ export class Twenty implements INodeType {
                 } catch (error) {
                     throw new NodeOperationError(
                         this.getNode(),
-                        `Failed to load resources from Twenty CRM. Please check your credentials and connection. Error: ${error.message}`,
+                        `Failed to load databases from Twenty CRM. Please check your credentials and connection. Error: ${error.message}`,
                     );
                 }
             },
 
             /**
-             * Get writable fields for the selected resource using DUAL-SOURCE architecture.
+             * Get writable fields for the selected database using DUAL-SOURCE architecture.
              * Combines metadata API (custom fields with detailed options) + GraphQL introspection (built-in enum fields).
              * Returns pipe-separated values (fieldName|fieldType) for auto-detection.
              */
             async getFieldsForResource(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
-                    // Get the selected resource
+                    // Get the selected database
                     const resource = this.getCurrentNodeParameter('resource') as string;
                     if (!resource) {
                         return [];
@@ -604,11 +740,20 @@ export class Twenty implements INodeType {
                     // Convert map to array
                     const allFields = Array.from(fieldMap.values());
 
-                    // Filter fields based on operation
-                    const isCreateOrUpdate = operation === 'createOne' || operation === 'updateOne';
-                    const filteredFields = isCreateOrUpdate
-                        ? allFields.filter((field) => field.isWritable) // Only writable fields for Create/Update
-                        : allFields; // All fields for Get/List/Delete
+                    // Filter fields based on operation and active status
+                    const isCreateOrUpdate = operation === 'create' || operation === 'update';
+                    const filteredFields = allFields.filter((field) => {
+                        // Always exclude deactivated fields (isActive: false)
+                        if (field.isActive === false) {
+                            return false;
+                        }
+                        // For Create/Update, only show writable fields
+                        if (isCreateOrUpdate) {
+                            return field.isWritable;
+                        }
+                        // For Get/List/Delete, show all active fields
+                        return true;
+                    });
 
                     // Helper: Map Twenty field type to n8n field type
                     const mapTwentyTypeToN8nType = (twentyType: string): string => {
@@ -655,7 +800,7 @@ export class Twenty implements INodeType {
                             : mapGraphQLTypeToN8nType(field.type);
 
                         return {
-                            name: field.label || field.name,
+                            name: getCleanFieldLabel(field.label, field.name),  // Clean label without description
                             value: `${field.name}|${n8nType}`,  // ✅ Pipe-separated for auto-detection
                             description: field.type,
                         };
@@ -798,6 +943,105 @@ export class Twenty implements INodeType {
                 }
             },
         },
+        listSearch: {
+            /**
+             * Get records from the selected database for the "From List" mode in Get operation.
+             * Returns a searchable list of records with their display name and ID.
+             * Supports filtering based on user's search input.
+             */
+            async getRecordsForDatabase(
+                this: ILoadOptionsFunctions,
+                filter?: string,
+            ): Promise<{ results: Array<{ name: string; value: string; url?: string }> }> {
+                try {
+                    // Get the selected database
+                    const resource = this.getCurrentNodeParameter('resource') as string;
+                    if (!resource) {
+                        return { results: [] };
+                    }
+                    
+                    // Get schema to find the object metadata
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
+                    const objectMetadata = schema.objects.find((obj) => obj.nameSingular === resource);
+
+                    if (!objectMetadata) {
+                        throw new NodeOperationError(this.getNode(), `Database "${resource}" not found in schema`);
+                    }
+
+                    // Always query common display fields regardless of schema
+                    // The schema metadata from /metadata endpoint is often incomplete
+                    const fieldsToQuery = ['id', 'name']; // Always include id and name at minimum
+
+                    // Build GraphQL query to list records (limit to 100 for dropdown performance)
+                    // Use plural name (e.g., 'companies') with first argument, not paging
+                    const pluralName = objectMetadata.namePlural;
+                    
+                    // Build filter clause if user has typed a search term
+                    // Use ilike for case-insensitive partial matching
+                    const hasFilter = filter && filter.trim() !== '';
+                    const filterClause = hasFilter
+                        ? ', filter: { name: { ilike: $searchPattern } }'
+                        : '';
+                    
+                    const query = `
+                        query List${objectMetadata.labelPlural.replace(/\s+/g, '')}($limit: Int!${hasFilter ? ', $searchPattern: String!' : ''}) {
+                            ${pluralName}(first: $limit${filterClause}) {
+                                edges {
+                                    node {
+                                        ${fieldsToQuery.join('\n                                        ')}
+                                    }
+                                }
+                            }
+                        }
+                    `;
+
+                    const variables: any = {
+                        limit: 100,
+                    };
+                    
+                    // Add search pattern with wildcards for partial matching
+                    if (hasFilter) {
+                        variables.searchPattern = `%${filter}%`;
+                    }
+
+                    const response: any = await twentyApiRequest.call(this, 'graphql', query, variables);
+
+                    // Extract records from GraphQL edges/node structure
+                    const edges = response[pluralName]?.edges || [];
+                    
+                    if (edges.length === 0) {
+                        return {
+                            results: [
+                                {
+                                    name: `No ${objectMetadata.labelPlural} Found`,
+                                    value: '',
+                                },
+                            ],
+                        };
+                    }
+
+                    // Transform to list search results
+                    const results = edges.map((edge: any) => {
+                        const record = edge.node;
+                        // Use name field if available, fallback to id
+                        const displayValue = record.name || record.id;
+                        
+                        return {
+                            name: displayValue,
+                            value: record.id,
+                            url: `https://app.twenty.com/objects/${objectMetadata.namePlural}/${record.id}`,
+                        };
+                    });
+
+                    return { results };
+                } catch (error) {
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `Failed to load records from Twenty CRM. Error: ${error.message}`,
+                    );
+                }
+            },
+        },
     };
 
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -816,7 +1060,7 @@ export class Twenty implements INodeType {
 
         for (let i = 0; i < items.length; i++) {
             try {
-                if (operation === 'createOne') {
+                if (operation === 'create') {
                     // Get fields from node parameters
                     const fieldsParam = this.getNodeParameter('fields', i, {}) as {
                         field?: IFieldData[];
@@ -847,9 +1091,37 @@ export class Twenty implements INodeType {
                         json: createdRecord,
                         pairedItem: { item: i },
                     });
-                } else if (operation === 'findOne') {
-                    // Get recordId from node parameters
-                    const recordId = this.getNodeParameter('recordId', i) as string;
+                } else if (operation === 'get') {
+                    // Get recordId from resourceLocator parameter
+                    const recordIdParam = this.getNodeParameter('recordId', i) as string | { mode: string; value: string };
+                    
+                    let recordId: string;
+                    
+                    // Handle both old string format (backward compatibility) and new resourceLocator format
+                    if (typeof recordIdParam === 'string') {
+                        recordId = recordIdParam;
+                    } else if (recordIdParam && typeof recordIdParam === 'object' && recordIdParam.value) {
+                        // ResourceLocator format
+                        if (recordIdParam.mode === 'url') {
+                            // Extract ID from URL using regex
+                            const urlMatch = recordIdParam.value.match(/https?:\/\/.*?\/objects\/[^\/]+\/([a-f0-9-]{36})/i);
+                            if (!urlMatch) {
+                                throw new NodeOperationError(
+                                    this.getNode(),
+                                    `Could not extract record ID from URL: ${recordIdParam.value}`,
+                                );
+                            }
+                            recordId = urlMatch[1];
+                        } else {
+                            // For 'list' and 'id' modes, value is already the ID
+                            recordId = recordIdParam.value;
+                        }
+                    } else {
+                        throw new NodeOperationError(
+                            this.getNode(),
+                            'No record ID provided',
+                        );
+                    }
 
                     // Build and execute get query
                     const { query, variables } = buildGetQuery(resource, recordId, objectMetadata);
@@ -861,7 +1133,9 @@ export class Twenty implements INodeType {
                     );
 
                     // Extract record from GraphQL edges/node structure
-                    const edges = response[resource]?.edges || [];
+                    // Note: Response uses plural name (e.g., 'companies') not singular
+                    const pluralName = objectMetadata.namePlural;
+                    const edges = response[pluralName]?.edges || [];
                     if (edges.length === 0) {
                         throw new NodeOperationError(this.getNode(), `Record with ID "${recordId}" not found`);
                     }
@@ -872,7 +1146,7 @@ export class Twenty implements INodeType {
                         json: record,
                         pairedItem: { item: i },
                     });
-                } else if (operation === 'updateOne') {
+                } else if (operation === 'update') {
                     // Get recordId and fields from node parameters
                     const recordId = this.getNodeParameter('recordId', i) as string;
                     const fieldsParam = this.getNodeParameter('fields', i, {}) as {
@@ -905,7 +1179,7 @@ export class Twenty implements INodeType {
                         json: updatedRecord,
                         pairedItem: { item: i },
                     });
-                } else if (operation === 'deleteOne') {
+                } else if (operation === 'delete') {
                     // Get recordId from node parameters
                     const recordId = this.getNodeParameter('recordId', i) as string;
 

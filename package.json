@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "0.5.2",
+  "version": "0.5.22",
   "description": "n8n node to call Twenty CRM's API",
   "keywords": [
     "n8n-community-node-package"
@@ -55,5 +55,8 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }

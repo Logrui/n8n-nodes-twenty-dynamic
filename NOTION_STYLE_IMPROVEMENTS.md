@@ -22,7 +22,7 @@ This document compares our Twenty Dynamic node implementation with the official 
 | Aspect | Our Twenty Node | Notion Node | Gap Analysis |
 |--------|----------------|-------------|--------------|
 | **Resource Selection** | Single "Object Name or ID" dropdown | Explicit resources (Block, Database, Database Page, Page, User) | ⚠️ Less intuitive for users |
-| **Operation Structure** | Generic (Create One, Get One, Update One, Delete One, List/Search) | Resource-specific operations (Database: Get/Get Many/Search, Page: Archive/Create/Search) | ⚠️ Less descriptive |
+| **Operation Structure** | Generic (Create, Get, Update, Delete, List/Search) | Resource-specific operations (Database: Get/Get Many/Search, Page: Archive/Create/Search) | ✅ Clean and simple |
 | **UI Organization** | Flat structure | Resource → Operation → Fields hierarchy | ⚠️ Could be clearer |
 
 ### **Field Handling**
@@ -154,7 +154,7 @@ export async function getDatabases(
 
 **For Twenty CRM:**
 - Implement `getObjects` listSearch for object selection
-- Implement `getRecords` listSearch for record selection (in Get One, Update One, Delete One)
+- Implement `getRecords` listSearch for record selection (in Get, Update, Delete operations)
 - Use Twenty's metadata API to search objects by name
 - Use GraphQL queries to search records by name field
 
@@ -254,7 +254,7 @@ nodes/Twenty/
   │       └── index.ts
   └── shared/
       ├── descriptions/
-      │   ├── CommonOperations.ts (Create One, Get One, Update One, Delete One, List/Search)
+      │   ├── CommonOperations.ts (Create, Get, Update, Delete, List/Search)
       │   └── CommonFields.ts (Fields collection, Filter, Sort, Options)
       ├── methods/
       │   └── index.ts

@@ -17,6 +17,7 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 ## Features
 
 ✨ **Dual-Source Architecture**: Combines Metadata API and GraphQL introspection for complete field coverage  
+✨ **Resource Group Filtering**: Organize resources by All, System, Custom, Database, and Database Item groups  
 ✨ **Automatic Field Detection**: Field types auto-detected and configured (no manual type selection)  
 ✨ **Built-in Enum Support**: Now supports all Twenty built-in enums (Person.gender, Opportunity.stage, etc.)  
 ✨ **Dynamic Resource Discovery**: Automatically fetches standard and custom objects from your Twenty instance  
@@ -100,12 +101,20 @@ When reporting bugs, please include:
 
 This node dynamically discovers available objects from your Twenty CRM instance via the metadata API and GraphQL introspection.
 
+**Resource Selection:**
+- **Resource Group**: Filter resources by type
+  - **All Resources**: Show all available objects (default)
+  - **Standard Resources**: Main user-facing Twenty objects (Company, Person, Opportunity, Task, Note, etc.)
+  - **System Resources**: Internal meta-objects (Views, Filters, Attachments, etc.) - Advanced users only
+  - **Custom Resources**: User-created custom objects
+- **Resource**: Select the specific object/resource to work with (dynamically filtered based on Resource Group)
+
 **Supported Operations:**
-- **Create One**: Create a new record with intelligent field inputs
-- **Find One**: Retrieve a single record by ID
-- **Update One**: Update an existing record (partial updates supported)
-- **Delete One**: Delete a record by ID (permanent - cannot be undone)
-- **Find Many**: Retrieve multiple records with pagination (up to 100 records)
+- **Create**: Create a new record with intelligent field inputs
+- **Get**: Retrieve a single record by ID
+- **Update**: Update an existing record (partial updates supported)
+- **Delete**: Delete a record by ID (permanent - cannot be undone)
+- **List/Search**: Retrieve multiple records with pagination (up to 100 records)
 
 **Dynamic Features:**
 - Automatically discovers all standard Twenty objects (Company, Person, Opportunity, Task, Note, etc.)

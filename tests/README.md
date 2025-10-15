@@ -78,12 +78,12 @@ Settings -> Community Nodes -> Install -> n8n-nodes-twenty-dynamic
             -Get notes by Company
             -Get notes by Person
     -Operations:
-        -Create One by ID
-        -Delete One by ID
-        -Get One by ID
-        -Find One by Name
+        -Create by ID
+        -Delete by ID
+        -Get by ID
+        -Find by Name
         -List/Search
-        -Update One
+        -Update
 
 ## Credentials
 
