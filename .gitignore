@@ -4,6 +4,7 @@ specs/
 .specify/
 .vscode/
 tests/
+.github/
 
 # Dependencies
 node_modules/
