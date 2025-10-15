@@ -95,7 +95,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
             },
             // Operation selection
             {
@@ -455,7 +455,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                 placeholder: 'Select a unique field (e.g., email)',
             },
             // Match value for upsert (when matching by unique field)
@@ -508,7 +508,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                 placeholder: 'Select a unique field (e.g., email)',
                 hint: 'The unique field to match records on. Each item in Input Data should have a matchValue for this field.',
             },
@@ -541,7 +541,7 @@ export class Twenty implements INodeType {
                                     loadOptionsMethod: 'getFieldsForResource',
                                 },
                                 default: '',
-                                description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+                                description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                             },
                             {
                                 displayName: 'Field Type',
@@ -850,7 +850,7 @@ export class Twenty implements INodeType {
                                     },
                                 },
                                 default: '',
-                                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                             },
                             // Multi-select field
                             {
@@ -867,7 +867,7 @@ export class Twenty implements INodeType {
                                     },
                                 },
                                 default: [],
-                                description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+                                description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                             },
                         ],
                     },

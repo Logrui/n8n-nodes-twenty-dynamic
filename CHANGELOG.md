@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2025-10-15
+
+### 🐛 Maintenance - ESLint Fixes
+
+**Fixed ESLint warnings for dynamic options descriptions**
+
+#### Fixed
+- ✅ Updated dynamic options parameter descriptions to match n8n standards
+- ✅ Fixed 6 ESLint errors related to `node-param-description-wrong-for-dynamic-options`
+- ✅ All dropdown descriptions now properly reference n8n expression documentation
+
+#### Technical Details
+- Updated descriptions for: Database, Field, Match Field, and SELECT/MULTI_SELECT option parameters
+- Changed generic descriptions to: "Choose from the list, or specify an ID using an expression"
+- Ensures compliance with n8n community node guidelines
+
+### Breaking Changes
+**None!** This is a maintenance release with no functional changes.
+
+---
+
+## [0.9.2] - 2025-10-15
+
+### 📝 Documentation Updates
+
+**Improved README clarity and organization**
+
+#### Changed
+- ✅ Updated feature emojis to be unique and relevant
+- ✅ Cleaned up and consolidated duplicate information
+- ✅ Fixed outdated references (cache behavior, operation names)
+- ✅ Better organization of operations sections
+- ✅ Enhanced bulk operations documentation
+
+---
+
 ## [0.9.1] - 2025-10-15
 
 ### 🐛 Bug Fix - Schema Caching Improvements
