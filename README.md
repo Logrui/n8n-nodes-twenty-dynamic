@@ -6,7 +6,7 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-[Twenty CRM](https://twenty.com) is a modern, open-source CRM system built with GraphQL.
+[Twenty CRM](https://twenty.com) is a modern, open-source CRM system built for self hosting
 
 **Table of Contents:**  
 [Features](#features) • [Installation](#installation) • [Operations](#operations) • [Credentials](#credentials) • [Development Status](#development-status) • [Bug Reporting](#bug-reporting-and-feature-requests) • [Resources](#resources) • [Credits](#credits)
