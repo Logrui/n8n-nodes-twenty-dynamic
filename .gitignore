@@ -1,6 +1,9 @@
 # Local Development Folders
 .Documentation/
 specs/
+.specify/
+.vscode/
+tests/
 
 # Dependencies
 node_modules/
