@@ -339,6 +339,77 @@ export async function uploadFileToTwenty(
 }
 
 /**
+ * Create an attachment record in Twenty CRM, linking the uploaded file to a parent record.
+ * 
+ * @param {IExecuteFunctions} this The n8n execution context.
+ * @param {number} itemIndex The index of the current item being processed.
+ * @param {string} filePath The full path of the uploaded file.
+ * @param {string} fileName The name of the file.
+ * @param {string} mimeType The MIME type of the file.
+ * @param {string} parentType The type of parent record (company/person/task/note/opportunity/none).
+ * @param {string | null} parentId The ID of the parent record (null if standalone).
+ * @returns {Promise<any>} The created attachment record.
+ */
+export async function createAttachmentRecord(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	filePath: string,
+	fileName: string,
+	mimeType: string,
+	parentType: string,
+	parentId: string | null,
+): Promise<any> {
+	const data: any = {
+		name: fileName,
+		fullPath: filePath,
+		type: mimeType,
+	};
+
+	// Add parent relationship if specified
+	if (parentId && parentType !== 'none') {
+		const parentField = `${parentType}Id`;
+		data[parentField] = parentId;
+	}
+
+	const query = `
+		mutation createAttachment($data: AttachmentCreateInput!) {
+			createAttachment(data: $data) {
+				id
+				name
+				fullPath
+				type
+				createdAt
+				${parentType !== 'none' ? `${parentType}Id` : ''}
+			}
+		}
+	`;
+
+	try {
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'twentyApi',
+			{
+				method: 'POST',
+				url: '/graphql',
+				body: { query, variables: { data } },
+				json: true,
+			},
+		);
+
+		if (response.errors) {
+			throw new Error(`Failed to create attachment: ${response.errors[0].message}`);
+		}
+
+		return response.data.createAttachment;
+	} catch (error) {
+		throw new NodeApiError(this.getNode(), error as JsonObject, {
+			message: `Failed to create attachment record for "${fileName}": ${(error as Error).message}`,
+			itemIndex,
+		});
+	}
+}
+
+/**
  * Fetches the complete schema metadata from Twenty CRM.
  * Queries the /metadata endpoint to get all objects and their fields.
  *

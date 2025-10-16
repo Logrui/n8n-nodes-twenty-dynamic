@@ -125,7 +125,7 @@
 - [X] **T010** [P] [US1] Add "File Folder" parameter in `nodes/Twenty/Twenty.node.ts` - File categorization
 - [X] **T011** [P] [US1] Add "Custom File Name" parameter (optional) in `nodes/Twenty/Twenty.node.ts`
 
-- [ ] **T012** [US1] Implement uploadFileToTwenty() in `nodes/Twenty/TwentyApi.client.ts` - Upload file using FormData multipart (reference: Google Cloud Storage pattern from research.md):
+- [X] **T012** [US1] Implement uploadFileToTwenty() in `nodes/Twenty/TwentyApi.client.ts` - Upload file using FormData multipart (reference: Google Cloud Storage pattern from research.md):
   ```typescript
   export async function uploadFileToTwenty(
     this: IExecuteFunctions,
@@ -183,7 +183,7 @@
   }
   ```
 
-- [ ] **T013** [US1] Implement createAttachmentRecord() in `nodes/Twenty/TwentyApi.client.ts` - Create attachment record linking file to parent:
+- [X] **T013** [US1] Implement createAttachmentRecord() in `nodes/Twenty/TwentyApi.client.ts` - Create attachment record linking file to parent:
   ```typescript
   export async function createAttachmentRecord(
     this: IExecuteFunctions,
@@ -242,7 +242,7 @@
   }
   ```
 
-- [ ] **T014** [US1] Add Upload File execution logic to execute() method in `nodes/Twenty/Twenty.node.ts` - Handle upload operation in main execution flow:
+- [X] **T014** [US1] Add Upload File execution logic to execute() method in `nodes/Twenty/Twenty.node.ts` - Handle upload operation in main execution flow:
   ```typescript
   // In execute() method, add case for attachment resource type
   if (resourceType === 'attachment') {
@@ -294,7 +294,7 @@
   }
   ```
 
-- [ ] **T015** [US1] Add error handling for binary data validation in `nodes/Twenty/Twenty.node.ts` - Wrap upload logic in try-catch with clear error messages including itemIndex
+- [X] **T015** [US1] Add error handling for binary data validation in `nodes/Twenty/Twenty.node.ts` - Wrap upload logic in try-catch with clear error messages including itemIndex
 
 **Checkpoint**: At this point, User Story 1 (Upload File) should be fully functional and testable independently. Users can upload files to Twenty CRM with or without attaching to parent records.
 

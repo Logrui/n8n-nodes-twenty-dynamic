@@ -19,6 +19,9 @@ import {
     queryEnumValues,
     IFieldMetadata,
     getCleanFieldLabel,
+    getItemBinaryData,
+    uploadFileToTwenty,
+    createAttachmentRecord,
 } from './TwentyApi.client';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
 import { 
@@ -1482,6 +1485,78 @@ export class Twenty implements INodeType {
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
+        const resourceType = this.getNodeParameter('resourceType', 0) as string;
+
+        // Handle attachment operations
+        if (resourceType === 'attachment') {
+            const attachmentOperation = this.getNodeParameter('attachmentOperation', 0) as string;
+
+            for (let i = 0; i < items.length; i++) {
+                try {
+                    if (attachmentOperation === 'uploadFile') {
+                        const inputDataFieldName = this.getNodeParameter('inputDataFieldName', i) as string;
+                        const attachToType = this.getNodeParameter('attachToType', i) as string;
+                        const fileFolder = this.getNodeParameter('fileFolder', i) as string;
+                        const customFileName = this.getNodeParameter('fileName', i, '') as string;
+
+                        // Extract binary data
+                        const { content, fileName, mimeType, fileSize } = await getItemBinaryData.call(
+                            this,
+                            i,
+                            inputDataFieldName,
+                        );
+
+                        const finalFileName = customFileName || fileName;
+
+                        // Upload file
+                        const { path, token } = await uploadFileToTwenty.call(
+                            this,
+                            i,
+                            content,
+                            finalFileName,
+                            mimeType,
+                            fileSize,
+                            fileFolder,
+                        );
+
+                        let result: any = { path, token, fileName: finalFileName };
+
+                        // Create attachment record if parent specified
+                        if (attachToType !== 'none') {
+                            const parentId = this.getNodeParameter(`${attachToType}Id`, i) as string;
+                            const attachment = await createAttachmentRecord.call(
+                                this,
+                                i,
+                                path,
+                                finalFileName,
+                                mimeType,
+                                attachToType,
+                                parentId,
+                            );
+                            result = attachment;
+                        }
+
+                        returnData.push({
+                            json: result,
+                            pairedItem: { item: i },
+                        });
+                    }
+                } catch (error) {
+                    if (this.continueOnFail()) {
+                        returnData.push({
+                            json: { error: (error as Error).message },
+                            pairedItem: { item: i },
+                        });
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+
+            return [returnData];
+        }
+
+        // Handle database operations (existing code)
         const operation = this.getNodeParameter('operation', 0) as string;
         const resource = this.getNodeParameter('resource', 0) as string;
 
