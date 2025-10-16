@@ -281,7 +281,7 @@ export async function uploadFileToTwenty(
 	fileFolder: string,
 ): Promise<{ path: string; token: string }> {
 	// Use Node.js 18+ built-in FormData (globally available)
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line
 	const form = new (globalThis as any).FormData() as FormData;
 
 	const query = `
