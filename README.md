@@ -62,6 +62,30 @@ Settings → Community Nodes → Install → n8n-nodes-twenty-dynamic
 npm install n8n-nodes-twenty-dynamic
 ```
 
+### For Developers & Advanced Users: Beta Channel 🧪
+
+Want to test new features before they're released? Install from the **beta** channel:
+
+```bash
+npm install n8n-nodes-twenty-dynamic@beta
+```
+
+**Beta Channel Features:**
+- 🔬 Early access to new features currently in development
+- 🐛 Help us test and provide feedback before stable release
+- ⚠️ May contain bugs - not recommended for production workflows
+- 📢 Report issues on [GitHub Issues](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues)
+
+**Current Beta Features (v0.10.0-beta.1):**
+- 📎 **Attachment Management**: Upload files to Twenty CRM, attach to records (Company/Person/Task/Note/Opportunity)
+- 📥 File download functionality (coming soon in beta)
+- 🎯 Resource locators for easy record selection (coming soon in beta)
+
+To switch back to stable:
+```bash
+npm install n8n-nodes-twenty-dynamic@latest
+```
+
 ---
 
 ## Credentials
@@ -169,7 +193,7 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ---
 
-## Development Status: Ready to Use for Majority of Operations✅
+## Development Status: Ready to Use for Majority of Operations ✅
 
 ### Production-Ready Features 
 
@@ -183,12 +207,28 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 - ✅ **Smart caching**: Fresh on execution, cached in editor
 - ✅ **Zero external dependencies**: Native n8n helpers only
 
+### Active Development Features 🚧
+
+**Attachment Management** (Available in Beta - v0.10.0-beta.1)
+- 📎 **Upload Files**: Upload files from n8n workflows to Twenty CRM
+- 🔗 **Attach to Records**: Link files to Companies, People, Tasks, Notes, Opportunities
+- 📁 **File Categorization**: Organize as Attachments, Files, or Profile Pictures
+- 💾 **Binary Data Support**: Works with files from HTTP Request, Google Drive, etc.
+- 🎯 **Standalone Files**: Upload files without parent records
+- ⏳ **Coming Soon**: Download files, Resource Locators for easy record selection
+
+**Install Beta to Test:**
+```bash
+npm install n8n-nodes-twenty-dynamic@beta
+```
+
 ### Roadmap ⏳
+- ⏳ Download attachments from Twenty CRM
+- ⏳ Resource Locators (user-friendly record selection UI)
 - ⏳ Advanced filter UI improvements
 - ⏳ Add support for remaining Twenty complex field types (Rating, etc.)
 - ⏳ Support for Twenty "Views" and "Relations"
 - ⏳ Support for get Database and Notion style resources
-
 
 ---
 ---
