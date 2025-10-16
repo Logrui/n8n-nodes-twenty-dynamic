@@ -928,11 +928,87 @@ export class Twenty implements INodeType {
                 },
                 displayOptions: {
                     show: {
+                        resourceType: ['database'],
                         operation: ['findMany'],
                     },
                 },
                 default: 50,
                 description: 'Max number of results to return',
+            },
+            // ========================================
+            // ATTACHMENT UPLOAD PARAMETERS
+            // ========================================
+            // Input Binary Field (for Upload File operation)
+            {
+                displayName: 'Input Binary Field',
+                name: 'inputDataFieldName',
+                type: 'string',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                    },
+                },
+                default: 'data',
+                required: true,
+                description: 'The name of the binary property which contains the file to upload',
+                hint: 'The binary data will be taken from the field specified here',
+            },
+            // Attach To parameter
+            {
+                displayName: 'Attach To',
+                name: 'attachToType',
+                type: 'options',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                    },
+                },
+                options: [
+                    { name: 'Company', value: 'company' },
+                    { name: 'Person', value: 'person' },
+                    { name: 'Task', value: 'task' },
+                    { name: 'Note', value: 'note' },
+                    { name: 'Opportunity', value: 'opportunity' },
+                    { name: 'None (Standalone)', value: 'none' },
+                ],
+                default: 'company',
+                description: 'The type of record to attach the file to',
+            },
+            // File Folder parameter
+            {
+                displayName: 'File Folder',
+                name: 'fileFolder',
+                type: 'options',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                    },
+                },
+                options: [
+                    { name: 'Attachment', value: 'Attachment' },
+                    { name: 'File', value: 'File' },
+                    { name: 'Profile Picture', value: 'ProfilePicture' },
+                ],
+                default: 'Attachment',
+                description: 'The folder category for file organization in Twenty CRM',
+            },
+            // Custom File Name parameter (optional)
+            {
+                displayName: 'Custom File Name',
+                name: 'fileName',
+                type: 'string',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                    },
+                },
+                default: '',
+                description: 'Custom filename to use instead of the original filename. Leave empty to use original.',
+                placeholder: 'e.g. contract-2025.pdf',
             },
         ],
     };

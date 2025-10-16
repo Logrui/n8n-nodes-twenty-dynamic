@@ -1,5 +1,6 @@
-import { IExecuteFunctions, ILoadOptionsFunctions, NodeApiError } from 'n8n-workflow';
+import { IExecuteFunctions, ILoadOptionsFunctions, NodeApiError, JsonObject } from 'n8n-workflow';
 import { Readable } from 'stream';
+import { Buffer } from 'buffer';
 
 // Define a union type for the 'this' context, as the function can be called from both execute and loadOptions
 type TwentyApiContext = IExecuteFunctions | ILoadOptionsFunctions;
@@ -254,6 +255,86 @@ export async function getItemBinaryData(
 			mimeType: binaryData.mimeType || 'application/octet-stream',
 			fileSize: buffer.length,
 		};
+	}
+}
+
+/**
+ * Upload a file to Twenty CRM using GraphQL Upload scalar with multipart/form-data.
+ * Uses Node.js built-in FormData (no external dependencies).
+ * 
+ * @param {IExecuteFunctions} this The n8n execution context.
+ * @param {number} itemIndex The index of the current item being processed.
+ * @param {Buffer | Readable} content The file content (buffer or stream).
+ * @param {string} fileName The name of the file.
+ * @param {string} mimeType The MIME type of the file.
+ * @param {number} fileSize The size of the file in bytes.
+ * @param {string} fileFolder The folder category (Attachment/File/ProfilePicture).
+ * @returns {Promise<{path: string; token: string}>} The uploaded file path and access token.
+ */
+export async function uploadFileToTwenty(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	content: Buffer | Readable,
+	fileName: string,
+	mimeType: string,
+	fileSize: number,
+	fileFolder: string,
+): Promise<{ path: string; token: string }> {
+	// Use Node.js 18+ built-in FormData (globally available)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const form = new (globalThis as any).FormData() as FormData;
+
+	const query = `
+		mutation uploadFile($file: Upload!) {
+			uploadFile(file: $file, folder: "${fileFolder}") {
+				paths
+				tokens
+			}
+		}
+	`;
+
+	// GraphQL Upload multipart spec:
+	// 1. operations: The GraphQL query with null file variable
+	form.append(
+		'operations',
+		JSON.stringify({
+			query,
+			variables: { file: null },
+		}),
+	);
+
+	// 2. map: Maps file index to variable path
+	form.append('map', JSON.stringify({ '0': ['variables.file'] }));
+
+	// 3. file: The actual file content
+	// FormData auto-detects type and handles streams natively
+	form.append('0', content, fileName);
+
+	try {
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'twentyApi',
+			{
+				method: 'POST',
+				url: '/graphql',
+				body: form,
+				// n8n handles Content-Type with boundary automatically
+			},
+		);
+
+		if (response.errors) {
+			throw new Error(`Upload failed: ${response.errors[0].message}`);
+		}
+
+		return {
+			path: response.data.uploadFile.paths[0],
+			token: response.data.uploadFile.tokens[0],
+		};
+	} catch (error) {
+		throw new NodeApiError(this.getNode(), error as JsonObject, {
+			message: `Failed to upload file "${fileName}": ${(error as Error).message}`,
+			itemIndex,
+		});
 	}
 }
 

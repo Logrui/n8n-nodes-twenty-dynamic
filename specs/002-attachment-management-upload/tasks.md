@@ -120,89 +120,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] **T008** [P] [US1] Add "Input Binary Field" parameter in `nodes/Twenty/Twenty.node.ts` - Binary data input field selector:
-  ```typescript
-  {
-    displayName: 'Input Binary Field',
-    name: 'inputDataFieldName',
-    type: 'string',
-    displayOptions: {
-      show: {
-        resourceType: ['attachment'],
-        attachmentOperation: ['uploadFile']
-      }
-    },
-    default: 'data',
-    required: true,
-    description: 'The name of the binary property which contains the file to upload',
-    hint: 'The binary data will be taken from the field specified here'
-  }
-  ```
-
-- [ ] **T009** [P] [US1] Add "Attach To" parameter in `nodes/Twenty/Twenty.node.ts` - Parent record type selector:
-  ```typescript
-  {
-    displayName: 'Attach To',
-    name: 'attachToType',
-    type: 'options',
-    displayOptions: {
-      show: {
-        resourceType: ['attachment'],
-        attachmentOperation: ['uploadFile']
-      }
-    },
-    options: [
-      { name: 'Company', value: 'company' },
-      { name: 'Person', value: 'person' },
-      { name: 'Task', value: 'task' },
-      { name: 'Note', value: 'note' },
-      { name: 'Opportunity', value: 'opportunity' },
-      { name: 'None (Standalone)', value: 'none' }
-    ],
-    default: 'company',
-    description: 'The type of record to attach the file to'
-  }
-  ```
-
-- [ ] **T010** [P] [US1] Add "File Folder" parameter in `nodes/Twenty/Twenty.node.ts` - File categorization:
-  ```typescript
-  {
-    displayName: 'File Folder',
-    name: 'fileFolder',
-    type: 'options',
-    displayOptions: {
-      show: {
-        resourceType: ['attachment'],
-        attachmentOperation: ['uploadFile']
-      }
-    },
-    options: [
-      { name: 'Attachment', value: 'Attachment' },
-      { name: 'File', value: 'File' },
-      { name: 'Profile Picture', value: 'ProfilePicture' }
-    ],
-    default: 'Attachment',
-    description: 'The folder category for file organization in Twenty CRM'
-  }
-  ```
-
-- [ ] **T011** [P] [US1] Add "Custom File Name" parameter (optional) in `nodes/Twenty/Twenty.node.ts`:
-  ```typescript
-  {
-    displayName: 'Custom File Name',
-    name: 'fileName',
-    type: 'string',
-    displayOptions: {
-      show: {
-        resourceType: ['attachment'],
-        attachmentOperation: ['uploadFile']
-      }
-    },
-    default: '',
-    description: 'Custom filename to use instead of the original filename. Leave empty to use original.',
-    placeholder: 'e.g. contract-2025.pdf'
-  }
-  ```
+- [X] **T008** [P] [US1] Add "Input Binary Field" parameter in `nodes/Twenty/Twenty.node.ts` - Binary data input field selector
+- [X] **T009** [P] [US1] Add "Attach To" parameter in `nodes/Twenty/Twenty.node.ts` - Parent record type selector
+- [X] **T010** [P] [US1] Add "File Folder" parameter in `nodes/Twenty/Twenty.node.ts` - File categorization
+- [X] **T011** [P] [US1] Add "Custom File Name" parameter (optional) in `nodes/Twenty/Twenty.node.ts`
 
 - [ ] **T012** [US1] Implement uploadFileToTwenty() in `nodes/Twenty/TwentyApi.client.ts` - Upload file using FormData multipart (reference: Google Cloud Storage pattern from research.md):
   ```typescript
