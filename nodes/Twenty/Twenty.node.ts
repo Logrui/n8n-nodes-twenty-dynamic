@@ -954,8 +954,8 @@ export class Twenty implements INodeType {
                 },
                 default: 'data',
                 required: true,
-                description: 'The name of the binary property which contains the file to upload',
-                hint: 'The binary data will be taken from the field specified here',
+                description: 'The name of the input field containing the binary file data',
+                hint: 'Find the name of the input field containing the binary data in the Input panel on the left, in the Binary tab',
             },
             // Attach To parameter
             {
@@ -978,6 +978,147 @@ export class Twenty implements INodeType {
                 ],
                 default: 'company',
                 description: 'The type of record to attach the file to',
+            },
+            // Match By (for parent record selection)
+            {
+                displayName: 'Match By',
+                name: 'attachmentMatchMode',
+                type: 'options',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                        attachToType: ['company', 'person', 'task', 'note', 'opportunity'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'From List',
+                        value: 'list',
+                        description: 'Select a record from the dropdown list',
+                    },
+                    {
+                        name: 'By URL',
+                        value: 'url',
+                        description: 'Paste the record URL from Twenty CRM',
+                    },
+                    {
+                        name: 'By ID',
+                        value: 'id',
+                        description: 'Enter the record UUID directly',
+                    },
+                    {
+                        name: 'By Field',
+                        value: 'field',
+                        description: 'Match by a unique field value (e.g., email, domain)',
+                    },
+                ],
+                default: 'list',
+                description: 'How to identify the parent record to attach the file to',
+            },
+            // Parent Record (Resource Locator for list/url/id modes)
+            {
+                displayName: 'Parent Record',
+                name: 'parentRecord',
+                type: 'resourceLocator',
+                default: { mode: 'list', value: '' },
+                required: true,
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                        attachToType: ['company', 'person', 'task', 'note', 'opportunity'],
+                        attachmentMatchMode: ['list', 'url', 'id'],
+                    },
+                },
+                description: 'The parent record to attach the file to',
+                modes: [
+                    {
+                        displayName: 'From List',
+                        name: 'list',
+                        type: 'list',
+                        hint: 'Select a record from the dropdown list',
+                        typeOptions: {
+                            searchListMethod: 'getRecordsForAttachmentParent',
+                            searchable: true,
+                            searchFilterRequired: false,
+                        },
+                    },
+                    {
+                        displayName: 'By URL',
+                        name: 'url',
+                        type: 'string',
+                        hint: 'Paste the record URL from Twenty CRM',
+                        placeholder: 'https://app.twenty.com/objects/companies/123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: 'https?://.*?/objects/[^/]+/[a-f0-9-]{36}',
+                                    errorMessage: 'Not a valid Twenty CRM record URL',
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        displayName: 'By ID',
+                        name: 'id',
+                        type: 'string',
+                        hint: 'Enter the record UUID directly',
+                        placeholder: '123e4567-e89b-12d3-a456-426614174000',
+                        validation: [
+                            {
+                                type: 'regex',
+                                properties: {
+                                    regex: '^[a-f0-9-]{36}$',
+                                    errorMessage: 'Not a valid UUID',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+            // Match Field (for field-based matching)
+            {
+                displayName: 'Match Field Name or ID',
+                name: 'attachmentMatchField',
+                type: 'options',
+                typeOptions: {
+                    loadOptionsMethod: 'getFieldsForAttachmentParent',
+                    loadOptionsDependsOn: ['attachToType'],
+                },
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                        attachToType: ['company', 'person', 'task', 'note', 'opportunity'],
+                        attachmentMatchMode: ['field'],
+                    },
+                },
+                default: '',
+                required: true,
+                description: 'The field to match on (e.g., email for person, domainName for company). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                placeholder: 'Select a unique field',
+                hint: 'The unique field to match the parent record on',
+            },
+            // Match Value (for field-based matching)
+            {
+                displayName: 'Match Value',
+                name: 'attachmentMatchValue',
+                type: 'string',
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                        attachmentOperation: ['uploadFile'],
+                        attachToType: ['company', 'person', 'task', 'note', 'opportunity'],
+                        attachmentMatchMode: ['field'],
+                    },
+                },
+                default: '',
+                required: true,
+                description: 'The value to match against the selected field',
+                placeholder: 'e.g., john@example.com',
+                hint: 'The value of the match field to find the parent record',
             },
             // File Folder parameter
             {
@@ -1351,6 +1492,38 @@ export class Twenty implements INodeType {
                     );
                 }
             },
+
+            /**
+             * Get fields for attachment parent type (for match field selection).
+             */
+            async getFieldsForAttachmentParent(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                try {
+                    const attachToType = this.getCurrentNodeParameter('attachToType') as string;
+                    if (!attachToType || attachToType === 'none') {
+                        return [];
+                    }
+
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, false);
+                    const objectMetadata = schema.objects.find((obj) => obj.nameSingular === attachToType);
+
+                    if (!objectMetadata) {
+                        return [];
+                    }
+
+                    const fields = await getDataSchemaForObject.call(this, attachToType);
+                    
+                    return fields.map((field) => ({
+                        name: getCleanFieldLabel(field.label, field.name),
+                        value: `${field.name}|${field.type}`,
+                        description: `Type: ${field.type}`,
+                    }));
+                } catch (error) {
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `Failed to load fields for ${this.getCurrentNodeParameter('attachToType')}. Error: ${error.message}`,
+                    );
+                }
+            },
         },
         listSearch: {
             /**
@@ -1479,6 +1652,112 @@ export class Twenty implements INodeType {
                     );
                 }
             },
+
+            /**
+             * Get records for attachment parent selection.
+             * Similar to getRecordsForDatabase but uses attachToType instead of resource.
+             */
+            async getRecordsForAttachmentParent(
+                this: ILoadOptionsFunctions,
+                filter?: string,
+            ): Promise<{ results: Array<{ name: string; value: string; url?: string }> }> {
+                try {
+                    // Get the selected parent type
+                    const attachToType = this.getCurrentNodeParameter('attachToType') as string;
+                    if (!attachToType || attachToType === 'none') {
+                        return { results: [] };
+                    }
+                    
+                    // Get schema to find the object metadata
+                    const schema: ISchemaMetadata = await getCachedSchema.call(this, true);
+                    const objectMetadata = schema.objects.find((obj) => obj.nameSingular === attachToType);
+
+                    if (!objectMetadata) {
+                        throw new NodeOperationError(this.getNode(), `Database "${attachToType}" not found in schema`);
+                    }
+
+                    // Special handling for Person: name is a FullName complex type
+                    const isPerson = attachToType === 'person';
+                    const nameFieldQuery = isPerson 
+                        ? `name {
+                            firstName
+                            lastName
+                        }`
+                        : 'name';
+                    
+                    const fieldsToQuery = ['id', nameFieldQuery];
+                    const pluralName = objectMetadata.namePlural;
+                    
+                    // Build filter clause if user has typed a search term
+                    const hasFilter = filter && filter.trim() !== '';
+                    let filterClause = '';
+                    
+                    if (hasFilter) {
+                        if (isPerson) {
+                            filterClause = ', filter: { or: [ { name: { firstName: { ilike: $searchPattern } } }, { name: { lastName: { ilike: $searchPattern } } } ] }';
+                        } else {
+                            filterClause = ', filter: { name: { ilike: $searchPattern } }';
+                        }
+                    }
+                    
+                    const query = `
+                        query List${objectMetadata.labelPlural.replace(/\s+/g, '')}($limit: Int!${hasFilter ? ', $searchPattern: String!' : ''}) {
+                            ${pluralName}(first: $limit${filterClause}) {
+                                edges {
+                                    node {
+                                        ${fieldsToQuery.join('\n                                        ')}
+                                    }
+                                }
+                            }
+                        }
+                    `;
+
+                    const variables: any = { limit: 100 };
+                    if (hasFilter) {
+                        variables.searchPattern = `%${filter}%`;
+                    }
+
+                    const response: any = await twentyApiRequest.call(this, 'graphql', query, variables);
+                    const edges = response[pluralName]?.edges || [];
+                    
+                    if (edges.length === 0) {
+                        return {
+                            results: [
+                                {
+                                    name: `No ${objectMetadata.labelPlural} Found`,
+                                    value: '',
+                                },
+                            ],
+                        };
+                    }
+
+                    const results = edges.map((edge: any) => {
+                        const record = edge.node;
+                        let displayValue: string;
+                        
+                        if (isPerson && record.name && typeof record.name === 'object') {
+                            const firstName = record.name.firstName || '';
+                            const lastName = record.name.lastName || '';
+                            displayValue = `${firstName} ${lastName}`.trim() || record.id;
+                        } else {
+                            displayValue = record.name || record.id;
+                        }
+                        
+                        return {
+                            name: displayValue,
+                            value: record.id,
+                            url: `https://app.twenty.com/objects/${objectMetadata.namePlural}/${record.id}`,
+                        };
+                    });
+
+                    return { results };
+                } catch (error) {
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `Failed to load parent records from Twenty CRM. Error: ${error.message}`,
+                    );
+                }
+            },
         },
     };
 
@@ -1523,7 +1802,51 @@ export class Twenty implements INodeType {
 
                         // Create attachment record if parent specified
                         if (attachToType !== 'none') {
-                            const parentId = this.getNodeParameter(`${attachToType}Id`, i) as string;
+                            let parentId: string;
+                            
+                            // Get match mode
+                            const matchMode = this.getNodeParameter('attachmentMatchMode', i, 'list') as string;
+                            
+                            if (matchMode === 'field') {
+                                // Match by field value
+                                const matchField = this.getNodeParameter('attachmentMatchField', i) as string;
+                                const matchValue = this.getNodeParameter('attachmentMatchValue', i) as string;
+                                
+                                // Extract field name and type from pipe-separated value
+                                const fieldName = matchField.split('|')[0];
+                                
+                                // Query to find the record by field value
+                                const pluralName = attachToType + 's'; // Simple pluralization
+                                const query = `
+                                    query Find${attachToType.charAt(0).toUpperCase() + attachToType.slice(1)}($fieldValue: String!) {
+                                        ${pluralName}(first: 1, filter: { ${fieldName}: { eq: $fieldValue } }) {
+                                            edges {
+                                                node {
+                                                    id
+                                                }
+                                            }
+                                        }
+                                    }
+                                `;
+                                
+                                const response: any = await twentyApiRequest.call(this, 'graphql', query, { fieldValue: matchValue });
+                                const edges = response[pluralName]?.edges || [];
+                                
+                                if (edges.length === 0) {
+                                    throw new NodeOperationError(
+                                        this.getNode(),
+                                        `No ${attachToType} found with ${fieldName} = "${matchValue}"`,
+                                        { itemIndex: i },
+                                    );
+                                }
+                                
+                                parentId = edges[0].node.id;
+                            } else {
+                                // Get from resource locator (list/url/id modes)
+                                const parentRecord = this.getNodeParameter('parentRecord', i, {}, { extractValue: true }) as string;
+                                parentId = parentRecord;
+                            }
+                            
                             const attachment = await createAttachmentRecord.call(
                                 this,
                                 i,

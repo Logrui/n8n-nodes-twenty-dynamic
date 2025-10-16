@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "0.10.0-beta.1",
+  "version": "0.10.0-beta.2",
   "description": "n8n node for Twenty CRM with dynamic GraphQL-based operations and attachment management",
   "keywords": [
     "n8n-community-node-package"
