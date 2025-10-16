@@ -1,4 +1,5 @@
 import { IExecuteFunctions, ILoadOptionsFunctions, NodeApiError } from 'n8n-workflow';
+import { Readable } from 'stream';
 
 // Define a union type for the 'this' context, as the function can be called from both execute and loadOptions
 type TwentyApiContext = IExecuteFunctions | ILoadOptionsFunctions;
@@ -215,6 +216,44 @@ export async function twentyRestApiRequest<T>(
 
 		// Generic error fallback
 		throw new NodeApiError(this.getNode(), error);
+	}
+}
+
+/**
+ * Extract binary data from an n8n item with stream vs buffer detection.
+ * Handles both large files (streamed from disk) and small files (in-memory buffers).
+ * 
+ * @param {IExecuteFunctions} this The n8n execution context.
+ * @param {number} itemIndex The index of the item containing the binary data.
+ * @param {string} propertyName The name of the binary property to extract.
+ * @returns {Promise<{content: Buffer | Readable; fileName: string; mimeType: string; fileSize: number}>}
+ */
+export async function getItemBinaryData(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	propertyName: string,
+): Promise<{ content: Buffer | Readable; fileName: string; mimeType: string; fileSize: number }> {
+	const binaryData = this.helpers.assertBinaryData(itemIndex, propertyName);
+
+	if (binaryData.id) {
+		// Large file: stream from disk
+		const stream = await this.helpers.getBinaryStream(binaryData.id);
+		const metadata = await this.helpers.getBinaryMetadata(binaryData.id);
+		return {
+			content: stream,
+			fileName: binaryData.fileName || 'file',
+			mimeType: binaryData.mimeType || 'application/octet-stream',
+			fileSize: metadata.fileSize,
+		};
+	} else {
+		// Small file: buffer from memory
+		const buffer = Buffer.from(binaryData.data, 'base64');
+		return {
+			content: buffer,
+			fileName: binaryData.fileName || 'file',
+			mimeType: binaryData.mimeType || 'application/octet-stream',
+			fileSize: buffer.length,
+		};
 	}
 }
 

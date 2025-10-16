@@ -51,12 +51,47 @@ export class Twenty implements INodeType {
             },
         ],
         properties: [
+            // Resource Type selection
+            {
+                displayName: 'Resource',
+                name: 'resourceType',
+                type: 'options',
+                noDataExpression: true,
+                options: [
+                    { name: 'Database', value: 'database' },
+                    { name: 'Attachment', value: 'attachment' }
+                ],
+                default: 'database',
+                description: 'The type of resource to work with'
+            },
+            // Attachment Operation selection
+            {
+                displayName: 'Operation',
+                name: 'attachmentOperation',
+                type: 'options',
+                noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resourceType: ['attachment'],
+                    },
+                },
+                options: [
+                    { name: 'Upload File', value: 'uploadFile', description: 'Upload a file to Twenty CRM' },
+                    { name: 'Download File', value: 'downloadFile', description: 'Download an attachment from Twenty CRM' }
+                ],
+                default: 'uploadFile'
+            },
             // Database Group selection
             {
                 displayName: 'Database Group',
                 name: 'resourceGroup',
                 type: 'options',
                 noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                    },
+                },
                 options: [
                     {
                         name: 'All Databases',
@@ -88,7 +123,12 @@ export class Twenty implements INodeType {
                 displayName: 'Database Name or ID',
                 name: 'resource',
                 type: 'options',
-																noDataExpression: true,
+								noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                    },
+                },
                 typeOptions: {
                     loadOptionsMethod: 'getResources',
                     loadOptionsDependsOn: ['resourceGroup'],
@@ -103,6 +143,11 @@ export class Twenty implements INodeType {
                 name: 'operation',
                 type: 'options',
                 noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                    },
+                },
                 // Show operation field when any database is selected
                 // displayOptions: show when resource field has any value
                 options: [
