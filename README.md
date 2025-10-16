@@ -81,6 +81,8 @@ npm install n8n-nodes-twenty-dynamic@beta
 - 📥 File download functionality (coming soon in beta)
 - 🎯 Resource locators for easy record selection (coming soon in beta)
 
+**📋 See [CHANGELOG-BETA.md](CHANGELOG-BETA.md) for detailed beta release notes**
+
 To switch back to stable:
 ```bash
 npm install n8n-nodes-twenty-dynamic@latest
@@ -238,7 +240,8 @@ npm install n8n-nodes-twenty-dynamic@beta
 - 📚 [n8n Community Nodes Documentation](https://docs.n8n.io/integrations/community-nodes/)
 - 🔧 [Twenty Developer Documentation](https://twenty.com/developers/)
 - 🔗 [Twenty GraphQL API Documentation](https://twenty.com/developers/section/graphql)
-- 📝 [Changelog](CHANGELOG.md) - Version history and release notes
+- 📝 [Changelog](CHANGELOG.md) - Stable version history and release notes
+- 🧪 [Beta Changelog](CHANGELOG-BETA.md) - Beta releases and experimental features
 - 💻 [GitHub Repository](https://github.com/Logrui/n8n-nodes-twenty-dynamic) - Source code and issues
 - 📦 [npm Package](https://www.npmjs.com/package/n8n-nodes-twenty-dynamic) - Package details
 
