@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-twenty-dynamic-testing",
-  "version": "0.9.0-beta.1",
-  "description": "n8n node for Twenty CRM with custom database and field support - TESTING BRANCH FOR ATTACHMENT MANAGEMENT FEATURE",
+  "name": "n8n-nodes-twenty-dynamic",
+  "version": "0.10.0-beta.1",
+  "description": "n8n node for Twenty CRM with dynamic GraphQL-based operations and attachment management",
   "keywords": [
     "n8n-community-node-package"
   ],
