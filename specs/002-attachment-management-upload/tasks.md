@@ -26,17 +26,17 @@
 
 ---
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup (Shared Infrastructure) ✅ COMPLETE
 
 **Purpose**: Project initialization and dependency setup
 
 - [X] **T001** [P] ~~Add form-data dependency to `package.json`~~ - **SKIPPED**: Using Node.js 18+ built-in FormData instead (no external dependency needed)
-- [X] **T002** [P] Update package version in `package.json` - Change version from `0.9.32` to `0.10.0` (MINOR bump for new feature)
+- [X] **T002** [P] Update package version in `package.json` - Change version from `0.9.32` to `0.10.0` (MINOR bump for new feature) - **Published as 0.10.0-beta.2**
 - [X] **T003** ~~Install dependencies~~ - **SKIPPED**: No new dependencies to install
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) ✅ COMPLETE
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
@@ -112,18 +112,24 @@
 
 ---
 
-## Phase 3: User Story 1 - Upload File to Twenty CRM (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Upload File to Twenty CRM (Priority: P1) 🎯 MVP ✅ COMPLETE (beta.2)
 
 **Goal**: Enable users to upload files from n8n workflows to Twenty CRM and attach them to CRM records
 
 **Independent Test**: Connect a file source node (HTTP Request, Google Drive) to Twenty node, upload a file, verify it appears in Twenty CRM's file storage and is attached to the specified CRM record
 
+**Status**: Published as v0.10.0-beta.2 - Ready for testing!
+
 ### Implementation for User Story 1
 
-- [X] **T008** [P] [US1] Add "Input Binary Field" parameter in `nodes/Twenty/Twenty.node.ts` - Binary data input field selector
+- [X] **T008** [P] [US1] Add "Input Binary Field" parameter in `nodes/Twenty/Twenty.node.ts` - Binary data input field selector (✅ Tooltip updated in beta.2)
 - [X] **T009** [P] [US1] Add "Attach To" parameter in `nodes/Twenty/Twenty.node.ts` - Parent record type selector
 - [X] **T010** [P] [US1] Add "File Folder" parameter in `nodes/Twenty/Twenty.node.ts` - File categorization
 - [X] **T011** [P] [US1] Add "Custom File Name" parameter (optional) in `nodes/Twenty/Twenty.node.ts`
+- [X] **T011.1** [US1] ✨ **BETA.2 ADDITION**: Add "Match By" parameter - Resource locator mode selector (list/url/id/field)
+- [X] **T011.2** [US1] ✨ **BETA.2 ADDITION**: Add "Parent Record" ResourceLocator - For list/url/id modes
+- [X] **T011.3** [US1] ✨ **BETA.2 ADDITION**: Add "Match Field" parameter - For field-based matching
+- [X] **T011.4** [US1] ✨ **BETA.2 ADDITION**: Add "Match Value" parameter - Field value to match
 
 - [X] **T012** [US1] Implement uploadFileToTwenty() in `nodes/Twenty/TwentyApi.client.ts` - Upload file using FormData multipart (reference: Google Cloud Storage pattern from research.md):
   ```typescript
@@ -295,8 +301,11 @@
   ```
 
 - [X] **T015** [US1] Add error handling for binary data validation in `nodes/Twenty/Twenty.node.ts` - Wrap upload logic in try-catch with clear error messages including itemIndex
+- [X] **T015.1** [US1] ✨ **BETA.2 ADDITION**: Add getRecordsForAttachmentParent() listSearch method - Loads parent records for dropdown
+- [X] **T015.2** [US1] ✨ **BETA.2 ADDITION**: Add getFieldsForAttachmentParent() loadOptions method - Loads match fields for field-based matching
+- [X] **T015.3** [US1] ✨ **BETA.2 ADDITION**: Update execute() to handle all match modes (list/url/id/field)
 
-**Checkpoint**: At this point, User Story 1 (Upload File) should be fully functional and testable independently. Users can upload files to Twenty CRM with or without attaching to parent records.
+**Checkpoint**: ✅ **COMPLETE** - User Story 1 (Upload File) is fully functional and published as v0.10.0-beta.2. Users can upload files to Twenty CRM with 4 different parent selection modes: From List, By URL, By ID, or By Field matching.
 
 ---
 

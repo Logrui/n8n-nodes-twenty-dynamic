@@ -76,10 +76,14 @@ npm install n8n-nodes-twenty-dynamic@beta
 - ⚠️ May contain bugs - not recommended for production workflows
 - 📢 Report issues on [GitHub Issues](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues)
 
-**Current Beta Features (v0.10.0-beta.1):**
-- 📎 **Attachment Management**: Upload files to Twenty CRM, attach to records (Company/Person/Task/Note/Opportunity)
-- 📥 File download functionality (coming soon in beta)
-- 🎯 Resource locators for easy record selection (coming soon in beta)
+**Current Beta Features (v0.10.0-beta.2):**
+- 📎 **Attachment Management**: Upload files to Twenty CRM with 4 selection modes
+  - ✅ From List: Searchable dropdown of parent records
+  - ✅ By URL: Paste Twenty CRM record URL
+  - ✅ By ID: Enter UUID directly
+  - ✅ By Field: Match by unique field (email, domain, etc.)
+- 📥 File download functionality (coming soon in next beta)
+- �️ Attachment metadata fields (coming soon in next beta)
 
 **📋 See [CHANGELOG-BETA.md](CHANGELOG-BETA.md) for detailed beta release notes**
 
@@ -211,13 +215,17 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ### Active Development Features 🚧
 
-**Attachment Management** (Available in Beta - v0.10.0-beta.1)
+**Attachment Management** (Available in Beta - v0.10.0-beta.2) ⭐ **NEW IMPROVEMENTS**
 - 📎 **Upload Files**: Upload files from n8n workflows to Twenty CRM
-- 🔗 **Attach to Records**: Link files to Companies, People, Tasks, Notes, Opportunities
+- 🔗 **Attach to Records**: Link files to Companies, People, Tasks, Notes, Opportunities with 4 selection modes:
+  - ✅ **From List**: Searchable dropdown of actual records (NEW in beta.2)
+  - ✅ **By URL**: Paste Twenty CRM record URL (NEW in beta.2)
+  - ✅ **By ID**: Enter UUID directly (NEW in beta.2)
+  - ✅ **By Field**: Match by unique field like email/domain (NEW in beta.2)
 - 📁 **File Categorization**: Organize as Attachments, Files, or Profile Pictures
 - 💾 **Binary Data Support**: Works with files from HTTP Request, Google Drive, etc.
 - 🎯 **Standalone Files**: Upload files without parent records
-- ⏳ **Coming Soon**: Download files, Resource Locators for easy record selection
+- ⏳ **Coming Soon**: Download files, Attachment metadata fields
 
 **Install Beta to Test:**
 ```bash
@@ -226,7 +234,7 @@ npm install n8n-nodes-twenty-dynamic@beta
 
 ### Roadmap ⏳
 - ⏳ Download attachments from Twenty CRM
-- ⏳ Resource Locators (user-friendly record selection UI)
+- ⏳ Attachment metadata fields (Fields/Properties for attachments)
 - ⏳ Advanced filter UI improvements
 - ⏳ Add support for remaining Twenty complex field types (Rating, etc.)
 - ⏳ Support for Twenty "Views" and "Relations"

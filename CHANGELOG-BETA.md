@@ -11,6 +11,117 @@ npm install n8n-nodes-twenty-dynamic@beta
 
 ---
 
+## [0.10.0-beta.2] - 2025-10-16
+
+### 🎯 MAJOR UI IMPROVEMENT: Resource Locator for Parent Record Selection
+
+**Addressing user feedback - making parent record selection user-friendly!**
+
+This release adds a complete Resource Locator UI for selecting parent records, eliminating the need for manual ID entry and providing multiple selection modes.
+
+#### ✨ Added
+
+**Resource Locator for Parent Records** 🎉
+- 📋 **From List Mode**: Searchable dropdown showing actual parent records with names
+  - Real-time search across companies, people, tasks, notes, opportunities
+  - Displays record names (handles Person's firstName/lastName automatically)
+  - Shows record URLs for quick reference
+- 🔗 **By URL Mode**: Paste Twenty CRM record URL directly
+  - URL validation with helpful error messages
+  - Extracts record ID automatically from URL
+- 🆔 **By ID Mode**: Enter record UUID manually
+  - UUID format validation
+  - For power users who already have IDs
+- 🔍 **By Field Mode**: Match by unique field value
+  - Select any field from parent record type (email, domainName, etc.)
+  - Enter value to match (e.g., john@example.com)
+  - Automatically finds and links to matching record
+
+**New UI Parameters**
+- **Match By**: Mode selector (From List / By URL / By ID / By Field)
+- **Parent Record**: Resource Locator (for list/url/id modes)
+- **Match Field**: Dynamic dropdown of fields (for field mode)
+- **Match Value**: Text input for match value (for field mode)
+
+**New Backend Methods**
+- `getRecordsForAttachmentParent()`: ListSearch method to load parent records for dropdown
+- `getFieldsForAttachmentParent()`: LoadOptions method to populate match field dropdown
+- Updated `execute()` to handle all 4 match modes with proper error handling
+
+#### 🐛 Fixed
+
+- **Input Binary Field Tooltip**: Updated description for better clarity
+  - Old: "The name of the binary property which contains the file to upload"
+  - New: "Find the name of the input field containing the binary data in the Input panel on the left, in the Binary tab"
+
+#### 🔧 Technical Details
+
+**Query Optimization**
+- Field-based matching performs GraphQL query before attachment creation
+- Proper error handling for "record not found" scenarios
+- Match field dropdown uses `loadOptionsDependsOn` for dynamic loading
+
+**Code Quality**
+- Added proper TypeScript type handling for resource locators
+- Fixed function signatures for `getDataSchemaForObject()` and `getCleanFieldLabel()`
+- Moved `getFieldsForAttachmentParent()` to correct section (loadOptions vs listSearch)
+
+#### 📝 Usage Examples
+
+**Example 1: From List (Easiest - Recommended for Most Users)**
+```
+1. Attach To: Company
+2. Match By: From List
+3. Parent Record: [Search and select from dropdown] → "Acme Corporation"
+4. File uploads and attaches to Acme Corporation
+```
+
+**Example 2: By Field (Most Flexible - Great for Automation)**
+```
+1. Attach To: Person
+2. Match By: By Field
+3. Match Field: email
+4. Match Value: {{ $json.email }}
+5. Finds person by email, then attaches file
+```
+
+**Example 3: By URL (Quick Copy-Paste)**
+```
+1. Attach To: Task
+2. Match By: By URL
+3. Parent Record URL: https://app.twenty.com/objects/tasks/abc-123-def
+4. File attaches to that specific task
+```
+
+**Example 4: By ID (Power Users)**
+```
+1. Attach To: Note  
+2. Match By: By ID
+3. Parent Record ID: abc-123-def-456
+4. File attaches to that note
+```
+
+#### ⏳ Known Issues
+
+- **Fields/Properties Parameter**: Not yet visible for attachment operations (coming in next beta)
+  - Will be used for setting attachment metadata
+  - Currently only shows for database operations (create/update/upsert)
+- **No download functionality yet**: Planned for next beta release
+
+#### 🚀 Migration from beta.1
+
+No breaking changes! If you were manually entering IDs in beta.1, you can now:
+- Switch to "From List" for easier selection
+- Or continue using "By ID" mode (works the same way)
+
+Simply update to beta.2:
+```bash
+npm install n8n-nodes-twenty-dynamic@beta
+# Restart n8n
+```
+
+---
+
 ## [0.10.0-beta.1] - 2025-10-15
 
 ### 🎉 NEW FEATURE: Attachment Management (Upload Files to Twenty CRM)
