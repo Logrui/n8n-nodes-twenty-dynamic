@@ -11,6 +11,7 @@ export { buildCreateMutation } from './create.operation';
 export { buildUpdateMutation } from './update.operation';
 export { buildDeleteMutation } from './delete.operation';
 export { executeUpsert } from './upsert.operation';
+export { executeGetDatabaseSchema } from './getDatabaseSchema.operation';
 
 // Bulk operations
 export { executeCreateMany } from './createMany.operation';

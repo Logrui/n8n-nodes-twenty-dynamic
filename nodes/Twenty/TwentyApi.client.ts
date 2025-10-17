@@ -435,20 +435,16 @@ export async function getSchemaMetadata(
 						isRemote
 						isUIReadOnly
 						isSearchable
-						fields(paging: { first: 200 }, filter: {}) {
-							edges {
-								node {
-									id
-									name
-									label
-									type
-									isNullable
-									isUIReadOnly
-									isActive
-									isSystem
-									options
-								}
-							}
+						fieldsList {
+							id
+							name
+							label
+							type
+							isNullable
+							isUIReadOnly
+							isActive
+							isSystem
+							options
 						}
 					}
 				}
@@ -473,21 +469,21 @@ export async function getSchemaMetadata(
 			isRemote: node.isRemote,
 			isUIReadOnly: node.isUIReadOnly,
 			isSearchable: node.isSearchable,
-			fields: node.fields.edges.map((fieldEdge: any) => ({
-				id: fieldEdge.node.id,
-				name: fieldEdge.node.name,
-				label: fieldEdge.node.label,
-				type: fieldEdge.node.type,
-				isNullable: fieldEdge.node.isNullable,
+			fields: node.fieldsList.map((field: any) => ({
+				id: field.id,
+				name: field.name,
+				label: field.label,
+				type: field.type,
+				isNullable: field.isNullable,
 				// isWritable is the inverse of isUIReadOnly
 				// If isUIReadOnly is true, field is NOT writable
 				// If isUIReadOnly is false/null/undefined, field IS writable
-				isWritable: fieldEdge.node.isUIReadOnly !== true,
+				isWritable: field.isUIReadOnly !== true,
 				// Additional field metadata for debugging
-				isActive: fieldEdge.node.isActive,
-				isSystem: fieldEdge.node.isSystem,
+				isActive: field.isActive,
+				isSystem: field.isSystem,
 				// Options for SELECT and MULTI_SELECT fields
-				options: fieldEdge.node.options || undefined,
+				options: field.options || undefined,
 				// relationMetadata not available in current API, set to null
 				relationMetadata: null,
 			})),

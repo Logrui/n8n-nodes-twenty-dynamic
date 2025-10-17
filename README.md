@@ -25,10 +25,9 @@ This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)
 
 📋 **SELECT/MULTI_SELECT Fields**: Dynamic dropdowns with real-time option loading  
 
-💾 **Smart Caching**: Automatic schema caching - fresh on execution, cached in editor for speed  
+🆕 **🆕 Fetch Database Schemas**: Fetch the schema for a specific database (Databases -> Get Schema) - uses Twenty OpenAPI schema for example data formats + Database specific fields
 
-🔄 **Dual-API Architecture**: Utilizes Twenty Metadata API and GraphQL introspection for complete field coverage for standard and custom fields. REST API used for execution of queries
-
+🆕 **🆕 Manage System Attachments**: Manage attachments in N8N using the new Resource: Attachments -> (Upload File, Download File, Get File)
 ---
 
 ## About This Project
@@ -39,11 +38,10 @@ Modelled after the official Notion N8N node. Unlike traditional n8n nodes with s
 - Schema changes and updates without requiring node updates
 
 **Key Architecture:**
-- **Dynamic Schema Discovery**: Queries `/metadata` endpoint to get available resources and fields
-- **Hybrid GraphQL/REST**: GraphQL for mutations, REST API for efficient data retrieval and node queries
+- **Dynamic Schema Discovery**: Queries `/metadata` endpoint to get available standard and custom resources and fields
+- **Hybrid OpenAPI/GraphQL/REST**: GraphQL for mutations, REST API for efficient data retrieval and node queries, and OpenAPI for schema validation
 - **Runtime Query Construction**: Builds queries dynamically based on user selections
 - **Intelligent Caching**: Fresh schema on execution, cached in editor UI for performance
-- **Native n8n Integration**: Uses `this.helpers.httpRequestWithAuthentication` for all API calls
 
 [Twenty CRM](https://twenty.com/) is an open-source CRM under rapid development. This node stays compatible through dynamic adaptation rather than static operation definitions. 
 ---
@@ -82,7 +80,7 @@ npm install n8n-nodes-twenty-dynamic@beta
   - ✅ By URL: Paste Twenty CRM record URL
   - ✅ By ID: Enter UUID directly
   - ✅ By Field: Match by unique field (email, domain, etc.)
-- 📥 File download functionality (coming soon in next beta)
+- 📥 File upload/download functionality (coming soon in next beta)
 - �️ Attachment metadata fields (coming soon in next beta)
 
 **📋 See [CHANGELOG-BETA.md](CHANGELOG-BETA.md) for detailed beta release notes**
@@ -179,9 +177,40 @@ The node automatically provides appropriate inputs based on field types:
 - ✅ All custom databases you create in Twenty
 - ✅ Custom fields on standard objects
 - ✅ Most custom field types supported
-- ⚠️ Some complex object-based custom fields are work-in-progress
 
 **Note:** The majority of custom fields are fully supported. If you encounter issues with specific custom field types, please [report them on GitHub](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues).
+
+---
+
+## Field Format Specifications 🆕
+
+**Available in v0.10.0-beta.3+**
+
+The **Get Schema** operation now includes detailed format specifications for each field type, based on comprehensive empirical testing of the Twenty CRM API. This helps you understand exactly what format to send and what to expect back.
+
+### What's Included
+
+Each field type includes:
+- **Pattern**: Human-readable format description
+- **Example**: Concrete example value in the correct format
+- **Description**: Brief explanation of the field type
+- **Accepts**: List of accepted input format variations
+- **Returns**: Description of what format Twenty returns
+- **Validation**: Strictness level (strict/flexible/none)
+- **Critical Notes**: ⚠️ Important behaviors you MUST know about
+- **Notes**: Additional helpful information
+
+### Field Types Covered
+
+Format specifications available for 17+ field types:
+- **Date/Time**: DATE_TIME, DATE
+- **Contact**: EMAILS, PHONES, LINKS
+- **Structured**: FULL_NAME, ADDRESS, CURRENCY
+- **Data**: ARRAY, RAW_JSON, NUMBER, TEXT, BOOLEAN
+- **Enums**: RATING, MULTI_SELECT
+- **IDs**: UUID
+
+**Coverage**: ~88% of fields in a typical database have format specifications.
 
 ---
 

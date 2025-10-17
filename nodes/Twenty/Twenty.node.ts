@@ -31,6 +31,7 @@ import {
     executeUpdateMany,
     executeDeleteMany,
     executeUpsertMany,
+    executeGetDatabaseSchema,
 } from './operations';
 
 export class Twenty implements INodeType {
@@ -138,7 +139,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
             },
             // Operation selection
             {
@@ -201,6 +202,12 @@ export class Twenty implements INodeType {
                         value: 'getMany',
                         description: 'Retrieve multiple records by IDs',
                         action: 'Get many records',
+                    },
+                    {
+                        name: 'Get Schema',
+                        value: 'getSchema',
+                        description: 'Get the database schema/data model with field types and structure',
+                        action: 'Get database schema',
                     },
                     {
                         name: 'List/Search',
@@ -503,7 +510,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                 placeholder: 'Select a unique field (e.g., email)',
             },
             // Match value for upsert (when matching by unique field)
@@ -556,7 +563,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                 placeholder: 'Select a unique field (e.g., email)',
                 hint: 'The unique field to match records on. Each item in Input Data should have a matchValue for this field.',
             },
@@ -589,7 +596,7 @@ export class Twenty implements INodeType {
                                     loadOptionsMethod: 'getFieldsForResource',
                                 },
                                 default: '',
-                                description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                                description: 'The name of the field to set. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                             },
                             {
                                 displayName: 'Field Type',
@@ -898,7 +905,7 @@ export class Twenty implements INodeType {
                                     },
                                 },
                                 default: '',
-                                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                             },
                             // Multi-select field
                             {
@@ -915,7 +922,7 @@ export class Twenty implements INodeType {
                                     },
                                 },
                                 default: [],
-                                description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                                description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                             },
                         ],
                     },
@@ -937,6 +944,76 @@ export class Twenty implements INodeType {
                 },
                 default: 50,
                 description: 'Max number of results to return',
+            },
+            // Simplify toggle (for Get Schema operation)
+            {
+                displayName: 'Simplify',
+                name: 'simplify',
+                type: 'boolean',
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                        operation: ['getSchema'],
+                    },
+                },
+                default: false,
+                description: 'Whether to return simplified output (only essential field information) or full output with all metadata and summary statistics',
+            },
+            // Include Format Details toggle (for Get Schema operation)
+            {
+                displayName: 'Include Format Details',
+                name: 'includeFormatDetails',
+                type: 'boolean',
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                        operation: ['getSchema'],
+                    },
+                },
+                default: true,
+                description: 'Whether to include detailed format specifications for each field type (patterns, examples, validation rules, and critical notes about field behavior)',
+            },
+            // Include System Fields toggle (for Get Schema operation)
+            {
+                displayName: 'Include System Fields',
+                name: 'includeSystemFields',
+                type: 'boolean',
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                        operation: ['getSchema'],
+                    },
+                },
+                default: false,
+                description: 'Whether to include system fields (isSystem=true) in the output. System fields are managed by Twenty CRM and typically not user-editable.',
+            },
+            // Include Inactive Fields toggle (for Get Schema operation)
+            {
+                displayName: 'Include Inactive Fields',
+                name: 'includeInactiveFields',
+                type: 'boolean',
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                        operation: ['getSchema'],
+                    },
+                },
+                default: false,
+                description: 'Whether to include inactive fields (isActive=false) in the output. Inactive fields are hidden in the UI and not typically used.',
+            },
+            // Include Read-Only Fields toggle (for Get Schema operation)
+            {
+                displayName: 'Include Read-Only Fields',
+                name: 'includeReadOnlyFields',
+                type: 'boolean',
+                displayOptions: {
+                    show: {
+                        resourceType: ['database'],
+                        operation: ['getSchema'],
+                    },
+                },
+                default: false,
+                description: 'Whether to include read-only fields (isWritable=false) in the output. Read-only fields cannot be modified through the API and are typically system-managed.',
             },
             // ========================================
             // ATTACHMENT UPLOAD PARAMETERS
@@ -1097,7 +1174,7 @@ export class Twenty implements INodeType {
                 },
                 default: '',
                 required: true,
-                description: 'The field to match on (e.g., email for person, domainName for company). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
+                description: 'The field to match on (e.g., email for person, domainName for company). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
                 placeholder: 'Select a unique field',
                 hint: 'The unique field to match the parent record on',
             },
@@ -2356,6 +2433,34 @@ export class Twenty implements INodeType {
                         }
                         throw error;
                     }
+                } else if (operation === 'getSchema') {
+                    // Get simplify parameter
+                    const simplify = this.getNodeParameter('simplify', i, false) as boolean;
+                    // Get includeFormatDetails parameter
+                    const includeFormatDetails = this.getNodeParameter('includeFormatDetails', i, true) as boolean;
+                    // Get includeSystemFields parameter
+                    const includeSystemFields = this.getNodeParameter('includeSystemFields', i, false) as boolean;
+                    // Get includeInactiveFields parameter
+                    const includeInactiveFields = this.getNodeParameter('includeInactiveFields', i, false) as boolean;
+                    // Get includeReadOnlyFields parameter
+                    const includeReadOnlyFields = this.getNodeParameter('includeReadOnlyFields', i, false) as boolean;
+
+                    // Execute Get Schema operation
+                    const schemaOutput = await executeGetDatabaseSchema.call(
+                        this,
+                        resource,
+                        objectMetadata,
+                        simplify,
+                        includeFormatDetails,
+                        includeSystemFields,
+                        includeInactiveFields,
+                        includeReadOnlyFields,
+                    );
+
+                    returnData.push({
+                        json: schemaOutput,
+                        pairedItem: { item: i },
+                    });
                 }
             } catch (error) {
                 if (this.continueOnFail()) {
