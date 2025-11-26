@@ -100,19 +100,33 @@ export async function introspectType(
 		if (field.name === '__typename') continue;
 
 		const fieldType = field.type;
-		const typeName = fieldType.name || fieldType.ofType?.name || fieldType.ofType?.ofType?.name;
-		const typeKind = fieldType.kind || fieldType.ofType?.kind || fieldType.ofType?.ofType?.kind;
+		
+		// Unwrap NON_NULL and LIST wrappers to get the base type
+		// GraphQL types can be wrapped: NON_NULL(LIST(NON_NULL(FullName))) etc.
+		let currentType = fieldType;
+		let unwrappedType = currentType;
+		while (currentType && (currentType.kind === 'NON_NULL' || currentType.kind === 'LIST')) {
+			unwrappedType = currentType.ofType;
+			currentType = unwrappedType;
+		}
+		
+		// Now get the actual type name and kind from the unwrapped type
+		const typeName = unwrappedType?.name || 'Unknown';
+		const typeKind = unwrappedType?.kind || 'Unknown';
 
 		const isConnection = typeName?.endsWith('Connection') || false;
+		// Only check scalar after unwrapping - check both kind and known scalar type names
 		const isScalar = typeKind === 'SCALAR' || 
 			['ID', 'String', 'Int', 'Float', 'Boolean', 'DateTime', 'Date', 'Time', 'UUID'].includes(typeName);
 		const isEnum = typeKind === 'ENUM';
-		const isObject = typeKind === 'OBJECT' && !isConnection;
+		// Check if it's an object type (and not a connection)
+		// Also check if it's a known complex type that requires subfields
+		const isObject = (typeKind === 'OBJECT' || typeKind === 'INPUT_OBJECT') && !isConnection;
 
 		fields.push({
 			name: field.name,
-			typeName: typeName || 'Unknown',
-			typeKind: typeKind || 'Unknown',
+			typeName: typeName,
+			typeKind: typeKind,
 			isConnection,
 			isScalar,
 			isEnum,
