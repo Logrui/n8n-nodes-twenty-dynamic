@@ -27,7 +27,7 @@ export async function executeUpsert(
 		recordIdParam?: string | { mode: string; value: string };
 		matchField?: string;
 		matchValue?: string;
-	},
+	},q
 ): Promise<{ record: any; action: 'updated' | 'created' }> {
 	let recordId: string | undefined;
 	let recordExists = false;
