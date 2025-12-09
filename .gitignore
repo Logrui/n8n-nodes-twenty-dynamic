@@ -53,3 +53,7 @@ yarn.lock
 AGENTS.md 
 GEMINI.md
 CLAUDE.md
+
+# Workflows and Agent Memory
+.claude/
+.gemini/

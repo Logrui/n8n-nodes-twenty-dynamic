@@ -15,20 +15,21 @@ export interface IComplexFieldInfo {
  * This will be used to detect when a field needs sub-field inputs
  */
 export const COMPLEX_FIELD_MAPPINGS: Record<string, string> = {
-	// FullName fields
-	name: 'FullName',
-	pointOfContact: 'FullName',
-	
+	// FullName fields - REMOVED 'name' as it is ambiguous (can be simple string in Company)
+	// 'name' should be detected via type introspection (FullName vs String)
+	// pointOfContact: 'FullName',
+
+
 	// Links fields
 	domainName: 'Links',
 	linkedinLink: 'Links',
 	xLink: 'Links',
 	website: 'Links',
 	cvcWebsite: 'Links',
-	
+
 	// Currency fields
 	annualRecurringRevenue: 'Currency',
-	
+
 	// Address fields
 	address: 'Address',
 };

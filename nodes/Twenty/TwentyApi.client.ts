@@ -415,23 +415,23 @@ export function getCleanFieldLabel(label: string | undefined | null, fieldName: 
 	// Always humanize the field name for consistency
 	// This gives us predictable, clean names like "Domain Name", "Phone Number", etc.
 	const humanizedName = humanize(fieldName);
-	
+
 	// If no label provided, use humanized field name
 	if (!label) {
 		return humanizedName;
 	}
-	
+
 	// If label is just the field name itself, humanize it
 	if (label.toLowerCase() === fieldName.toLowerCase()) {
 		return humanizedName;
 	}
-	
+
 	// For timestamp fields (createdAt, updatedAt, deletedAt), always use humanized name
 	// This ensures consistency: "Created At", "Updated At", "Deleted At"
 	if (fieldName.endsWith('At') || fieldName.endsWith('Date') || fieldName.endsWith('Time')) {
 		return humanizedName;
 	}
-	
+
 	// If label contains ": " (colon separator), extract the title part
 	// Example: "Ideal Customer Profile: Indicates whether..." → "Ideal Customer Profile"
 	if (label.includes(': ')) {
@@ -441,7 +441,7 @@ export function getCleanFieldLabel(label: string | undefined | null, fieldName: 
 			return titlePart;
 		}
 	}
-	
+
 	// Detect verbose/descriptive patterns and prefer humanized name
 	const verbosePatterns = [
 		' of the ',
@@ -452,18 +452,18 @@ export function getCleanFieldLabel(label: string | undefined | null, fieldName: 
 		' when ',
 		' that ',
 	];
-	
+
 	const isVerbose = verbosePatterns.some(pattern => label.includes(pattern));
 	if (isVerbose) {
 		return humanizedName;
 	}
-	
+
 	// For short, concise labels (under 30 chars), use them as-is
 	// This handles cases like "Id", "Category", "Status" nicely
 	if (label.length <= 30) {
 		return label;
 	}
-	
+
 	// For anything else that's verbose, use humanized field name
 	return humanizedName;
 }
@@ -588,8 +588,8 @@ export async function getDataSchemaForObject(
 			const isWritable = !isReadOnlyField(field.name);
 
 			// Determine if this is a relation field (ends with 'Connection' or is a known relation type)
-			const isRelation = fieldType.includes('Connection') || 
-				fieldType === 'WorkspaceMember' || 
+			const isRelation = fieldType.includes('Connection') ||
+				fieldType === 'WorkspaceMember' ||
 				fieldType === 'Actor';
 
 			return {
@@ -643,7 +643,7 @@ export async function queryGraphQLType(
 			}
 		}
 	`;
-	
+
 	const response: any = await twentyApiRequest.call(this, 'graphql', query);
 	return response;
 }
@@ -659,7 +659,7 @@ export async function queryGraphQLType(
 export async function queryEnumValues(
 	this: TwentyApiContext,
 	enumName: string,
-): Promise<Array<{name: string, label: string}>> {
+): Promise<Array<{ name: string, label: string }>> {
 	const query = `
 		query GetEnumValues {
 			__type(name: "${enumName}") {
@@ -671,16 +671,16 @@ export async function queryEnumValues(
 			}
 		}
 	`;
-	
+
 	const response: any = await twentyApiRequest.call(this, 'graphql', query);
-	
+
 	if (response.__type?.enumValues) {
 		return response.__type.enumValues.map((v: any) => ({
 			name: v.name,
 			label: v.name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase()),
 		}));
 	}
-	
+
 	return [];
 }
 
@@ -721,7 +721,7 @@ export async function buildComprehensiveFieldSelections(
 	`;
 
 	const response: any = await twentyApiRequest.call(this, 'graphql', introspectionQuery);
-	
+
 	if (!response.__type?.fields) {
 		// Fallback to basic fields if introspection fails
 		return 'id\ncreatedAt\nupdatedAt\ndeletedAt\nname';
@@ -759,7 +759,7 @@ export async function buildComprehensiveFieldSelections(
 	for (const field of fields) {
 		// Skip __typename meta field and connection fields (they need pagination)
 		if (field.name === '__typename') continue;
-		
+
 		const fieldType = field.type;
 		const typeName = fieldType.name || fieldType.ofType?.name || fieldType.ofType?.ofType?.name;
 		const typeKind = fieldType.kind || fieldType.ofType?.kind || fieldType.ofType?.ofType?.kind;
@@ -768,7 +768,7 @@ export async function buildComprehensiveFieldSelections(
 		if (typeName?.endsWith('Connection')) continue;
 
 		// Handle scalar and enum fields
-		if (typeKind === 'SCALAR' || typeKind === 'ENUM' || 
+		if (typeKind === 'SCALAR' || typeKind === 'ENUM' ||
 			['ID', 'String', 'Int', 'Float', 'Boolean', 'DateTime', 'Date', 'Time', 'UUID'].includes(typeName)) {
 			fieldSelections.push(field.name);
 		}
@@ -798,7 +798,7 @@ export function buildCreateMutation(
 	// Build field selection using schema metadata + essential core fields
 	// Schema metadata may be incomplete, so we add commonly-used fields manually
 	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
-	
+
 	// Get fields from schema metadata
 	const metadataFields = objectMetadata.fields
 		.filter((field) => {
@@ -807,10 +807,17 @@ export function buildCreateMutation(
 			return false;
 		})
 		.map((field) => field.name);
-	
+
+	// Handle complex name field for Person and WorkspaceMember
+	let nameField = 'name';
+	const complexNameObjects = ['person', 'workspaceMember', 'workspacemember'];
+	if (complexNameObjects.includes(objectNameSingular.toLowerCase())) {
+		nameField = 'name {\n\t\t\t\t	firstName\n\t\t\t\t	lastName\n\t\t\t\t}';
+	}
+
 	// Add essential fields that should always be requested but might be missing from metadata
-	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name'];
-	
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', nameField];
+
 	// Combine and deduplicate
 	const allFields = [...new Set([...essentialFields, ...metadataFields])];
 	const fieldSelections = allFields.join('\n\t\t\t');
@@ -852,7 +859,7 @@ export function buildGetQuery(
 	// Build field selection using schema metadata + essential core fields
 	// Schema metadata may be incomplete, so we add commonly-used fields manually
 	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
-	
+
 	// Get fields from schema metadata
 	const metadataFields = objectMetadata.fields
 		.filter((field) => {
@@ -861,10 +868,10 @@ export function buildGetQuery(
 			return false;
 		})
 		.map((field) => field.name);
-	
+
 	// Add essential fields that should always be requested but might be missing from metadata
 	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
-	
+
 	// Combine and deduplicate
 	const allFields = [...new Set([...essentialFields, ...metadataFields])];
 	const fieldSelections = allFields.join('\n\t\t\t\t');
@@ -912,7 +919,7 @@ export function buildUpdateMutation(
 	// Build field selection using schema metadata + essential core fields
 	// Schema metadata may be incomplete, so we add commonly-used fields manually
 	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
-	
+
 	// Get fields from schema metadata
 	const metadataFields = objectMetadata.fields
 		.filter((field) => {
@@ -921,10 +928,17 @@ export function buildUpdateMutation(
 			return false;
 		})
 		.map((field) => field.name);
-	
+
+	// Handle complex name field for Person and WorkspaceMember
+	let nameField = 'name';
+	const complexNameObjects = ['person', 'workspaceMember', 'workspacemember'];
+	if (complexNameObjects.includes(objectNameSingular.toLowerCase())) {
+		nameField = 'name {\n\t\t\t\t	firstName\n\t\t\t\t	lastName\n\t\t\t\t}';
+	}
+
 	// Add essential fields that should always be requested but might be missing from metadata
-	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
-	
+	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', nameField, 'position', 'searchVector'];
+
 	// Combine and deduplicate
 	const allFields = [...new Set([...essentialFields, ...metadataFields])];
 	const fieldSelections = allFields.join('\n\t\t\t');
@@ -1001,7 +1015,7 @@ export function buildListQuery(
 	// Build field selection using schema metadata + essential core fields
 	// Schema metadata may be incomplete, so we add commonly-used fields manually
 	const scalarTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'TIME', 'PHONE', 'EMAIL', 'SELECT', 'RAW_JSON'];
-	
+
 	// Get fields from schema metadata
 	const metadataFields = objectMetadata.fields
 		.filter((field) => {
@@ -1010,10 +1024,10 @@ export function buildListQuery(
 			return false;
 		})
 		.map((field) => field.name);
-	
+
 	// Add essential fields that should always be requested but might be missing from metadata
 	const essentialFields = ['id', 'createdAt', 'updatedAt', 'deletedAt', 'name', 'position', 'searchVector'];
-	
+
 	// Combine and deduplicate
 	const allFields = [...new Set([...essentialFields, ...metadataFields])];
 	const fieldSelections = allFields.join('\n\t\t\t\t');
