@@ -19,7 +19,8 @@ run git add .
 
 run git commit -m '[short summary]'
 
-run the command that lists npm latest versions from online repo and identify the most recent online versions
+Get the latest npm tags in the online repo
+run npm view n8n-nodes-twenty-dynamic dist-tags 
 
 Increment our local build by the smallest possible increment eg latest online = 0.10.1-beta.10 ----> 0.10.1-beta.11
 
