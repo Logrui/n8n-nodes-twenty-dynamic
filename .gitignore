@@ -48,3 +48,8 @@ yarn.lock
 
 .env
 
+# Memory Files
+
+AGENTS.md 
+GEMINI.md
+CLAUDE.md
