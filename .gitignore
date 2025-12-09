@@ -57,3 +57,7 @@ CLAUDE.md
 # Workflows and Agent Memory
 .claude/
 .gemini/
+
+
+# Documentation
+.docs/
