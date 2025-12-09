@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "0.10.1-beta.12",
+  "version": "0.9.33",
   "description": "n8n node for Twenty CRM with custom database and field support",
   "keywords": [
     "n8n-community-node-package"
