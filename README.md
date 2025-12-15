@@ -1,49 +1,107 @@
 # n8n-nodes-twenty-dynamic
 
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png" alt="n8n-nodes-twenty-dynamic Banner" width="100%">
+</p>
 
-This is an n8n community node that integrates **[Twenty CRM](https://twenty.com)** with fully **dynamic resource and field discovery**. It automatically adapts to your Twenty instance schema, including custom objects and fields, without requiring node updates.
+<p align="center">
+  <a href="https://www.npmjs.com/package/n8n-nodes-twenty-dynamic">
+    <img src="https://img.shields.io/npm/v/n8n-nodes-twenty-dynamic.svg?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/n8n-nodes-twenty-dynamic">
+    <img src="https://img.shields.io/npm/dm/n8n-nodes-twenty-dynamic.svg?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/Logrui/n8n-nodes-twenty-dynamic/blob/master/LICENSE">
+    <img src="https://img.shields.io/npm/l/n8n-nodes-twenty-dynamic.svg?style=flat-square" alt="license">
+  </a>
+</p>
+
+ The most dynamic, **zero-config** integration for [Twenty CRM](https://twenty.com). Custom built n8n community node under active development modelled after the official Notion n8n node for ease of use and dynamic resource and field discovery. It automatically adapts to your Twenty instance custom schema, including custom objects and fields, without requiring node updates. It is a fork of the official Twenty CRM node and extends it with dynamic resource and field discovery.
+
+Unlike older Twenty CRM nodes, this node **dynamically adapts** to your Twenty instance in real-time. It automatically discovers your **custom objects**, **fields**, and schema changes without requiring manual node updates or configuration. This node is backwards compatible for older Twenty CRM instances and the latest Twenty CRM instances and aligns with the direction the official team is going with the dynamic GraphQL API.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
 [Twenty CRM](https://twenty.com) is a modern, open-source CRM system built for self hosting
 
-**Table of Contents:**  
-[Features](#features) • [Installation](#installation) • [Operations](#operations) • [Credentials](#credentials) • [Development Status](#development-status) • [Bug Reporting](#bug-reporting-and-feature-requests) • [Resources](#resources) • [Credits](#credits)
+## Overview
+
+| Feature | Older Nodes / Forks | **n8n-nodes-twenty-dynamic** |
+| :--- | :--- | :--- |
+| **Custom Objects** | ❌ Requires manual JSON inputs or HTTP Request Nodes | ✅ **Auto-discovered instantly** |
+| **Custom Fields** | ❌ Often missing or raw JSON | ✅ **Native n8n inputs** for all types |
+| **Performance** | 🐢 Sequential (slow) | ⚡ **Bulk Ops (10-100x faster)** |
+| **System Objects** | ❌ Hidden | ✅ **Full Access** (Attachments, Metadata) |
+| **Ease of Use** | 🔧 Configuration heavy | ✨ **Zero-config**, smart defaults |
 
 ---
 
-## Features
+### 🚀 Key Features
 
-🗄️ **Supports Custom Databases and Fields**: Automatically fetches all standard and custom objects from your Twenty instance
+✨ **Supports Personal and Enterprise Custom Databases and Fields**: Automatically fetches all standard and custom objects from your personal Twenty instance
 
-🔓 **Access System Databases**: View and edit system databases not normally accessible through the Twenty UI (Company/Person Attachments (attachments), Synced Email Metadata (messages), and more)
+💎 **Support for Complex Field Types**: Template-based and dynamicinputs for FullName, Links, Currency, Address, Emails, Phones  
 
-⚡ **Full CRUD + Bulk Operations**: Create, Read, Update, Delete, Upsert - all with bulk variants  
+🔓 **Unlocks Access TwentyCRM System Databases**: View and edit system databases not normally accessible through the Twenty UI (Company/Person Attachments (attachments), Synced Email Metadata (messages), and more for advanced workflows)
 
-🧩 **Support for Complex Field Types**: Template-based inputs for FullName, Links, Currency, Address, Emails, Phones  
+🎯 **Smart Field Resolution**: Dynamic dropdowns for SELECT/MULTI_SELECT and auto-formatted inputs for specialized types  
 
-📋 **SELECT/MULTI_SELECT Fields**: Dynamic dropdowns with real-time option loading  
+⚡ **High-Performance Bulk Operations**: Process thousands of records with **10x-100x speed improvements** (Create, Update, Delete, Upsert)  
 
-💾 **Smart Caching**: Automatic schema caching - fresh on execution, cached in editor for speed  
+🧬 **Dual-API Architecture**: Utilizes both Twenty Metadata API and GraphQL introspection for complete field coverage for standard and custom fields. REST API used for execution of queries. Maintain compatibility with older Twenty CRM API structures.
 
-🔄 **Dual-API Architecture**: Utilizes Twenty Metadata API and GraphQL introspection for complete field coverage for standard and custom fields. REST API used for execution of queries
+---
+## 📦 Installation
+
+**For n8n Self Hosted Community Edition Instances**
+
+1. Go to **Settings** → **Community Nodes**
+2. Select **Install**
+3. Enter package name: `n8n-nodes-twenty-dynamic`
+
+### Requirements (In GEneral Works for Most N8N and Twenty CRM Self Hosted Instances)
+- **Twenty CRM**: v1.4.0 or later - Supports Twenty CRM v1.11.0 (Newest Version as of 2025-12-15)
+- **n8n**: v1.0.0 or later (Recommended) - Supports n8n 2.0 Beta (Newest Version as of 2025-12-15)
 
 ---
 
-## About This Project
+## 🔧 Configuration
+
+### 1. Generate API Key
+In your **Twenty CRM** instance:
+1. Navigate to **Settings** → **Developers** → **API Keys**
+2. Click **Create API Key** and copy the value
+
+### 2. Add Credentials in n8n
+1. Search for **"Twenty API"** credentials
+2. Enter the following details:
+   - **API Key**: The key you copied from Twenty
+   - **Domain**: Your Twenty instance URL (e.g., `https://app.twenty.com` or `http://localhost:3000`)
+
+> [!IMPORTANT]
+> **Do not** include `/graphql` or `/metadata` in the domain. The node handles this automatically.
+>
+> ✅ Correct: `https://app.twenty.com`
+> ❌ Incorrect: `https://app.twenty.com/graphql`
+
+---
+---
+
+### About This Project
 
 Modelled after the official Notion N8N node. Unlike traditional n8n nodes with static operations, this node **dynamically discovers** the Twenty CRM schema at runtime. It queries the Twenty REST and GraphQL APIs to automatically adapt to:
-- Support all standard and system Twenty objects (Company, Person, Opportunity, etc.)
-- Custom databases and fields created in your Twenty instance  
+- Support for all standard and system Twenty objects (Company, Person, Opportunity, etc.)
+- Support for all custom databases and fields created in your Twenty instance  
 - Schema changes and updates without requiring node updates
 
-**Key Architecture:**
+**Key Technical Architecture:**
 - **Dynamic Schema Discovery**: Queries `/metadata` endpoint to get available resources and fields
 - **Hybrid GraphQL/REST**: GraphQL for mutations, REST API for efficient data retrieval and node queries
 - **Runtime Query Construction**: Builds queries dynamically based on user selections
 - **Intelligent Caching**: Fresh schema on execution, cached in editor UI for performance
-- **Native n8n Integration**: Uses `this.helpers.httpRequestWithAuthentication` for all API calls
+- **Native n8n Integration**: Uses n8n's newest built-in HTTP request functionality for all API calls
+- **TypeScript**: Modern, type-safe development with TypeScript
+- **Zero Dependencies**: No external dependencies, pure n8n functionality
 
 [Twenty CRM](https://twenty.com/) is an open-source CRM under rapid development. This node stays compatible through dynamic adaptation rather than static operation definitions. 
 ---
@@ -149,7 +207,7 @@ The node automatically provides appropriate inputs based on field types:
 - ✅ All custom databases you create in Twenty
 - ✅ Custom fields on standard objects
 - ✅ Most custom field types supported
-- ⚠️ Some complex object-based custom fields are work-in-progress
+- ⚠️ Some complex object-based custom fields are work-in-progress - please report bugs on GitHub
 
 **Note:** The majority of custom fields are fully supported. If you encounter issues with specific custom field types, please [report them on GitHub](https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues).
 
@@ -186,12 +244,12 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 ### Roadmap ⏳
 - ⏳ Advanced filter UI improvements
 - ⏳ Add support for remaining Twenty complex field types (Rating, etc.)
-- ⏳ Support for Twenty "Views" and "Relations"
+- ⏳ Support for Twenty "Views" and "Relations" and new AI Features
 - ⏳ Support for get Database and Notion style resources
 
 
 ---
----
+
 
 ## Resources
 
@@ -207,7 +265,7 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ## Compatibility
 
-Compatible and tested with Twenty v1.7.6 and n8n Version 1.113.3
+Compatible and tested with the newest Twenty v1.11.0 and n8n Version 2.0 Beta (Last Updated: 2025-12-15)
 
 
 ## Credits
