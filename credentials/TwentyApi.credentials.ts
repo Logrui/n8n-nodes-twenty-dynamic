@@ -25,11 +25,8 @@ export class TwentyApi implements ICredentialType {
 		{
 			displayName: 'Schema Cache',
 			name: 'schemaCache',
-			type: 'json',
+			type: 'hidden',
 			default: '',
-			displayOptions: {
-				show: {},
-			},
 			description: 'Stores the API schema to reduce API calls. Will be updated automatically.',
 		},
 	];
@@ -43,7 +40,7 @@ export class TwentyApi implements ICredentialType {
 		},
 	};
 
-		test: ICredentialTestRequest = {
+	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials?.domain}}',
 			url: '/open-api/core',

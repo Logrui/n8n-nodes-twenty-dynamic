@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.1",
   "description": "Advanced GraphQL n8n node for Twenty CRM with custom database, field support, and resource locators. Complete CRUD support for custom and default databases",
   "keywords": [
     "n8n-community-node-package",
