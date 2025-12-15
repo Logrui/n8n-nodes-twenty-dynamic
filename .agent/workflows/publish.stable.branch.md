@@ -14,15 +14,17 @@ Identify the newest 'normal/stable' npm branch tag in the npm online repository 
 
 ## Instructions
 
-run git add .
-
-run git commit -m '[short summary]'
-
-run the command that lists npm latest versions from online repo and identify the most recent online versions
-
 Increment our local build by the smallest possible increment eg latest online = 0.10.1.5 ----> 0.10.1.6
 
 run npm version [version-tag.number] eg npm version 0.10.1.6
+
+run git add .
+
+run git commit -m '[commit_type]:[short summary]' eg bugfix: [description] or feature: [description]
+
+Get the latest npm tags in the online repo
+run npm view n8n-nodes-twenty-dynamic dist-tags 
+
 
 run npm publish
 

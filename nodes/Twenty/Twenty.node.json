@@ -2,16 +2,22 @@
 	"node": "n8n-nodes-base.Twenty",
 	"nodeVersion": "1.0.3",
 	"codexVersion": "1.0",
-	"categories": ["Sales", "Marketing & Content"],
+	"categories": [
+		"Twenty CRM",
+		"CRM",
+		"Database",
+		"AI",
+		"Marketing & Content"
+	],
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://twenty.com/developers/rest-api/core#/"
+				"url": "https://docs.twenty.com/developers/api-and-webhooks/api#core-api"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "https://twenty.com/developers"
+				"url": "https://docs.twenty.com/developers/api-and-webhooks/api#core-api"
 			}
 		]
 	}
