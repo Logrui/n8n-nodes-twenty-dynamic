@@ -28,4 +28,29 @@ run git commit -m '[commit_type]:[short summary]' eg bugfix: [description] or fe
 
 run npm publish --tag beta
 
-## Inform and report back to user
+
+## Inform and report back to developer
+
+For installation instructions, instruct the user as follows: (required format)
+
+
+**Installation**
+
+Goto Settings ---> Community Nodes
+
+Click Install ---> Version Information Below
+
+```bash
+Name of Node such as (n8n-nodes-suna-kortix)@[npm version]
+```
+
+
+Example
+
+```bash
+n8n-nodes-suna-kortix@0.10.1-beta.11
+```
+
+
+
+Note: N8N will prompt you to update to the "latest" version - do not do this because it will revert you. Additionally, you may need to uninstall previous beta or latest nodes first in order to install a beta version of the node

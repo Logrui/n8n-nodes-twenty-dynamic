@@ -29,3 +29,18 @@ run npm view n8n-nodes-twenty-dynamic dist-tags
 run npm publish
 
 ## Inform and report back to user
+
+Goto Settings ---> Community Nodes
+
+Click Install ---> Version Information Below
+
+```bash
+Name of Node such as (n8n-nodes-suna-kortix)@[npm version]
+```
+
+
+Example
+
+```bash
+n8n-nodes-suna-kortix@0.10.1
+```
