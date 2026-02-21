@@ -1,13 +1,19 @@
 {
-	"node": "n8n-nodes-base.Twenty",
-	"nodeVersion": "1.0.3",
+	"node": "n8n-nodes-twenty-dynamic.twenty",
+	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": [
-		"Twenty CRM",
 		"CRM",
-		"Database",
-		"AI",
 		"Marketing & Content"
+	],
+	"alias": [
+		"Twenty",
+		"Twenty CRM",
+		"twenty-crm",
+		"CRM",
+		"contacts",
+		"companies",
+		"opportunities"
 	],
 	"resources": {
 		"credentialDocumentation": [

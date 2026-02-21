@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-twenty-dynamic",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Advanced GraphQL n8n node for Twenty CRM with custom database, field support, and resource locators. Complete CRUD support for custom and default databases",
   "keywords": [
     "n8n-community-node-package",
@@ -30,8 +30,6 @@
     "n8n-nodes",
     "open-source-crm"
   ],
-  "main": "index.js",
-  "index": "dist/nodes/Twenty/Twenty.node.js",
   "license": "MIT",
   "homepage": "https://github.com/Logrui/n8n-nodes-twenty-dynamic",
   "author": {
@@ -83,8 +81,5 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5"
   }
 }

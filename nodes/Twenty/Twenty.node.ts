@@ -30,6 +30,42 @@ import {
     executeUpsertMany,
 } from './operations';
 
+/**
+ * Smart filter builder for the List/Search operation.
+ * Detects whether the user typed plain text or advanced filter syntax,
+ * and auto-wraps plain text into the appropriate Twenty REST API filter format.
+ *
+ * Advanced syntax (passed through as-is): field[operator]:value
+ * Plain text (auto-wrapped): searches the 'name' field with ilike
+ * Person database: searches both firstName and lastName with OR logic
+ *
+ * @param searchQuery The raw search query from the user
+ * @param resource The selected database/resource (e.g., 'person', 'company')
+ * @returns The properly formatted filter string for Twenty REST API
+ */
+function buildSmartFilter(searchQuery: string, resource: string): string {
+	// Check if it's already advanced syntax (contains field[operator]:value pattern)
+	const isAdvancedSyntax = /\w+(\.\w+)?\[.+\]:/.test(searchQuery);
+
+	if (isAdvancedSyntax) {
+		// Advanced syntax: pass through as-is
+		return searchQuery;
+	}
+
+	// Plain text search: auto-wrap based on resource type
+	const searchValue = searchQuery.trim();
+	const escapedValue = searchValue.replace(/"/g, '\\"');
+
+	// Person database: name is a FullName composite type (firstName + lastName)
+	// Search both fields with OR logic
+	if (resource === 'person') {
+		return `or(name.firstName[ilike]:"%${escapedValue}%",name.lastName[ilike]:"%${escapedValue}%")`;
+	}
+
+	// All other databases: search the 'name' field (simple string)
+	return `name[ilike]:"%${escapedValue}%"`;
+}
+
 export class Twenty implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'Twenty CRM - Dynamic',
@@ -889,6 +925,67 @@ export class Twenty implements INodeType {
                 default: 50,
                 description: 'Max number of results to return',
             },
+            // Search Query (for List/Search operation)
+            {
+                displayName: 'Search Query',
+                name: 'searchQuery',
+                type: 'string',
+                displayOptions: {
+                    show: {
+                        operation: ['findMany'],
+                    },
+                },
+                default: '',
+                placeholder: 'Type a search term or use advanced syntax...',
+                description: 'Search records by name. Just type a word (e.g., "google") to search by name. For Person database, searches both first and last name automatically. For advanced filtering, use Twenty filter syntax: field[operator]:value (e.g., createdAt[gte]:"2024-01-01"). Operators: eq, neq, like, ilike, gt, gte, lt, lte, in, startsWith, is. Combine with and()/or()/not(). Leave empty to return all records.',
+            },
+            // Order By Field (for List/Search operation) - dynamic dropdown
+            {
+                displayName: 'Order By Field Name or ID',
+                name: 'orderByField',
+                type: 'options',
+                typeOptions: {
+                    loadOptionsMethod: 'getFieldsForOrderBy',
+                },
+                displayOptions: {
+                    show: {
+                        operation: ['findMany'],
+                    },
+                },
+                default: '',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
+            },
+            // Order Direction (for List/Search operation) - shown when Order By field is selected
+            {
+                displayName: 'Order Direction',
+                name: 'orderByDirection',
+                type: 'options',
+                displayOptions: {
+                    show: {
+                        operation: ['findMany'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'Ascending (Nulls First)',
+                        value: 'AscNullsFirst',
+                    },
+                    {
+                        name: 'Ascending (Nulls Last)',
+                        value: 'AscNullsLast',
+                    },
+                    {
+                        name: 'Descending (Nulls First)',
+                        value: 'DescNullsFirst',
+                    },
+                    {
+                        name: 'Descending (Nulls Last)',
+                        value: 'DescNullsLast',
+                    },
+                ],
+                default: 'AscNullsFirst',
+                description: 'Sort direction for results',
+            },
         ],
     };
 
@@ -1116,6 +1213,72 @@ export class Twenty implements INodeType {
                     return options;
                 } catch (error) {
                     throw new NodeOperationError(this.getNode(), `Failed to load fields for resource: ${error.message}`);
+                }
+            },
+
+            /**
+             * Get sortable fields for the Order By dropdown in List/Search operation.
+             * Uses dual-source architecture (metadata + GraphQL introspection) for full field coverage.
+             * Filters to only include scalar/sortable field types.
+             */
+            async getFieldsForOrderBy(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                try {
+                    const resource = this.getCurrentNodeParameter('resource') as string;
+                    if (!resource) {
+                        return [{ name: '(No Sorting)', value: '' }];
+                    }
+
+                    // SOURCE 1: Metadata API (custom fields)
+                    const schema = await getCachedSchema.call(this, false);
+                    const objectMeta = schema.objects.find((obj) => obj.nameSingular === resource);
+                    const metadataFields: IFieldMetadata[] = objectMeta?.fields || [];
+
+                    // SOURCE 2: GraphQL Introspection (all fields including built-in)
+                    const graphqlFields: IFieldMetadata[] = await getDataSchemaForObject.call(this, resource);
+
+                    // MERGE: Combine both sources (metadata takes priority)
+                    const fieldMap = new Map<string, IFieldMetadata>();
+                    graphqlFields.forEach((f) => fieldMap.set(f.name, { ...f, source: 'graphql' as const }));
+                    metadataFields.forEach((f) => fieldMap.set(f.name, { ...f, source: 'metadata' as const }));
+
+                    const allFields = Array.from(fieldMap.values());
+
+                    // Filter: only sortable fields (scalar types, exclude relations/connections)
+                    const sortableTypes = ['TEXT', 'NUMBER', 'BOOLEAN', 'UUID', 'DATE_TIME', 'DATE', 'SELECT', 'PHONE', 'EMAIL', 'RAW_JSON'];
+                    const sortableFields = allFields.filter((f) => {
+                        if (f.isActive === false) return false;
+                        // Include fields with known sortable types
+                        if (sortableTypes.includes(f.type)) return true;
+                        // Exclude connection/relation fields
+                        if (f.type.includes('Connection')) return false;
+                        // Include simple scalar fields from GraphQL introspection
+                        if (['String', 'Int', 'Float', 'Boolean', 'DateTime', 'Date', 'UUID', 'ID'].includes(f.type)) return true;
+                        return false;
+                    });
+
+                    // Build options: empty option first (for "no sorting"), then sorted fields
+                    const options: INodePropertyOptions[] = [
+                        { name: '(No Sorting)', value: '' },
+                    ];
+
+                    sortableFields.forEach((field) => {
+                        options.push({
+                            name: getCleanFieldLabel(field.label, field.name),
+                            value: field.name,
+                            description: field.type,
+                        });
+                    });
+
+                    // Sort alphabetically (after the empty option)
+                    options.sort((a, b) => {
+                        if (a.value === '') return -1;
+                        if (b.value === '') return 1;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    return options;
+                } catch (error) {
+                    throw new NodeOperationError(this.getNode(), `Failed to load sortable fields: ${error.message}`);
                 }
             },
 
@@ -1788,20 +1951,31 @@ export class Twenty implements INodeType {
                         });
                     });
                 } else if (operation === 'findMany') {
-                    // Get limit from node parameters
+                    // Get parameters for List/Search operation
                     const limit = this.getNodeParameter('limit', i) as number;
+                    const searchQuery = this.getNodeParameter('searchQuery', i, '') as string;
+                    const orderByField = this.getNodeParameter('orderByField', i, '') as string;
+                    const orderByDirection = this.getNodeParameter('orderByDirection', i, 'AscNullsFirst') as string;
 
                     // Use REST API for List/Search operation - returns all fields automatically
-                    // GraphQL still used for database/field selection, but REST for actual data retrieval
                     const pluralName = objectMetadata.namePlural;
-                    
+
                     // Build query parameters for REST API
-                    // Note: REST API uses query parameters for pagination
                     const queryParts: string[] = [];
                     if (limit) {
                         queryParts.push(`limit=${limit}`);
                     }
-                    
+                    if (searchQuery) {
+                        // Use smart filter builder to auto-detect plain text vs advanced syntax
+                        const filter = buildSmartFilter(searchQuery, resource);
+                        // URL-encode the filter value - Twenty REST API requires encoded filter params
+                        // Without encoding, % wildcards in ilike get interpreted as URL percent-encoding
+                        queryParts.push(`filter=${encodeURIComponent(filter)}`);
+                    }
+                    if (orderByField) {
+                        queryParts.push(`order_by=${orderByField}[${orderByDirection}]`);
+                    }
+
                     const restPath = `/${pluralName}${queryParts.length > 0 ? '?' + queryParts.join('&') : ''}`;
                     
                     try {
